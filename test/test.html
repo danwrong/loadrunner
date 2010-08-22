@@ -162,6 +162,22 @@
           });
         });
       });
+      
+      QUnit.module('built files');
+      
+      QUnit.test('should correctly execute code from built file', function() {
+        require.reset();
+        
+        expect(1);
+        stop(1000);
+        
+        require('javascripts/compiled.js', function() {
+          require('modd', function(modd) {
+            equals('success from mod a via mod d', modd.test(), 'modd exports loaded');    
+            start();
+          });
+        });
+      });
     </script>
   </body>
 </html>
