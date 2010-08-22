@@ -1088,7 +1088,7 @@ Envjs.uri = function(path, base) {
 
     // Semi-common trick is to make an iframe with src='javascript:false'
     //  (or some equivalent).  By returning '', the load is skipped
-    if (path.indexOf('javascript') === 0) {
+    if (path.indexOf('javascript:') === 0) {
         return '';
     }
 

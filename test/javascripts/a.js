@@ -1,1 +1,2 @@
-var loadedA = true;
+//var loadedA = true;
+console.log('a');
