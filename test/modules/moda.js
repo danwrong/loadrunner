@@ -1,0 +1,3 @@
+module('moda', {
+  test: 'success'
+});

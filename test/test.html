@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>module.js test</title>
+    <link rel="stylesheet" href="../vendor/qunit/qunit.css" type="text/css" charset="utf-8">
+    <script src="../vendor/qunit/qunit.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../lib/module.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1 id="qunit-header">module.js test</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+    
+    <script type="text/javascript" charset="utf-8">
+      require.modulePath = 'modules/';
+      
+      QUnit.module('load');
+      
+      QUnit.test('should load a file and execute callback', function() {
+        expect(2);
+        stop(1000);
+        
+        load('javascripts/a.js', function(file) {
+          ok(loadedA, 'a.js was executed');
+          equal('javascripts/a.js', file, 'load callback passes filename');
+          start();
+        });
+      });
+      
+      QUnit.module('module');
+      
+      QUnit.test('should be able to define a module with an object literal', function() {
+        var mod = module('test', { a: 1, b: 'thing' });
+        
+        equals(1, mod.exports.a, 'exports.a set');
+        equals('thing', mod.exports.b, 'exports.b set');
+      });
+      
+      QUnit.test('should be able to define a with a function', function() {
+        var mod = module('test', function(exports) {
+          exports.a = 1;
+          exports.b = 'thing';
+        });
+        
+        equals(1, mod.exports.a, 'exports.a set');
+        equals('thing', mod.exports.b, 'exports.b set');
+      });
+      
+      QUnit.module('require (file)');
+      
+      QUnit.test('should require a single normal file', function() {
+        expect(1);
+        stop(1000);
+        
+        loadedA = false;
+        
+        require('javascripts/a.js', function() {
+          ok(loadedA, 'a.js was executed');
+          start();
+        });
+      });
+      
+      QUnit.test('should require multiple files in parallel', function() {
+        expect(2);
+        stop(1000);
+        
+        require('javascripts/c.js', 'javascripts/d.js', function() {
+          ok(loadedC, 'c.js was executed');
+          ok(loadedD, 'd.js was executed');
+          start();
+        });
+      });
+      
+      QUnit.test('should require a file only once', function() {
+        expect(2);
+        stop(1000);
+        
+        bLoadCount = 0;
+        
+        require('javascripts/b.js', function() {
+          ok(bLoadCount, 'b.js was executed');
+          
+          require('javascripts/b.js', function() {
+            equal(1, bLoadCount, 'b.js was not loaded again');
+            start();
+          });
+          
+        });
+      });
+      
+      QUnit.module('require (module)');
+      
+      QUnit.test('should require a module', function() {
+        expect(1);
+        stop(1000);
+        
+        require('moda', function(moda) {
+          equals('success', moda.test, 'module exports loaded');     
+          start();
+        });
+      });
+      
+      QUnit.test('should require multiple modules', function() {
+        expect(2);
+        stop(1000);
+        
+        require('moda', 'modb', function(moda, modb) {
+          equals('success', moda.test, 'moda exports loaded');
+          equals('success', modb.test(), 'modb exports loaded');     
+          start();
+        });
+      });
+      
+      QUnit.test('should require modules that have a dependency', function() {
+        expect(1);
+        stop(1000);
+        
+        require('modc', function(modc) {
+          equals('success from mod a', modc.test(), 'modc exports loaded');     
+          start();
+        });
+      });
+      
+      QUnit.test('should require modules that have nested dependencies', function() {
+        expect(1);
+        stop(1000);
+        
+        require('modd', function(modd) {
+          equals('success from mod a via mod d', modd.test(), 'modd exports loaded');     
+          start();
+        });
+      });
+      
+      QUnit.test('should require modules that have dependencies on regular scripts', function() {
+        expect(1);
+        stop(1000);
+        
+        require('mode', function(mode) {
+          ok(mode.test(), 'mode ensured d.js was loaded');     
+          start();
+        });
+      });
+      
+      QUnit.module('require.loaded');
+      
+      QUnit.test('should list files loaded in order', function() {
+        require.reset();
+        
+        expect(1);
+        stop(1000);
+        
+        require('javascripts/a.js', function() {
+          require('javascripts/b.js', function() {
+            require('moda', function() {
+              deepEqual(
+                ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'], require.loaded,
+                'require.loaded has files in correct order');
+              start();
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
