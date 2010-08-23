@@ -84,8 +84,12 @@ Building Combined Files
 
 This is still in its early stages so its bound to change and/or be slightly awkard to work with but here are the basics:
 
-1. cd to the directory your html pages are.
-2. run path/to/bin/build path/to/application.js path/to/built.js --modules=your/module/path
+Usage: build {options} {source_file_or_module} {destination_file}
+       --no-min                      disable minification
+       --with-modulej                embed module.js
+       --modules=path                path to unbuilt modules
+       --docRoot=path                path to / (your sites web root)
+       --cwd=path                    path to current directory if you use relative paths
 
 With any luck you should get the entire dependency tree combined and minified. This is all very in progress but the basic implementation seems sound.
 
