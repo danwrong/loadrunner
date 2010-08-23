@@ -88,4 +88,11 @@ This is still in its early stages so its bound to change and/or be slightly awka
 
 With any luck you should get the entire dependency tree combined and minified. This is all very in progress but the basic implementation seems sound.
 
+Browser Support
+---------------
+
+Tests pass in: Safari 5, Google Chrome, FF 3.5
+
+I'll add more as I get around to running the tests on other browsers.
+
 Feedback appreciated as always.
