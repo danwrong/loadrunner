@@ -17,6 +17,12 @@ The aim is to create an asyncronous loader/dependency manager for use in the bro
 * Facilitate on demand loading - Along side loadtime dependency definition, allow developers to require files as and when needed
 * Be as close to CommonJS as possible - but not be afraid to change things where it makes sense to do so
 
+Tests
+-----
+
+Open test/test.html in a browser.  That's it.
+
+
 Examples
 --------
 
