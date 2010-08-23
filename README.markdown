@@ -65,6 +65,6 @@ This is still in its early stages so its bound to change and/or be slightly awka
 1. cd to the directory your html pages are.
 2. run path/to/bin/build path/to/application.js path/to/built.js --modules=your/module/path
 
-With any luck you should get the entire dependency tree combine and minified. This is all very in progress but the basic implementation seems sound.
+With any luck you should get the entire dependency tree combined and minified. This is all very in progress but the basic implementation seems sound.
 
 Feedback appreciated as always.
