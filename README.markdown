@@ -91,8 +91,8 @@ With any luck you should get the entire dependency tree combined and minified. T
 Browser Support
 ---------------
 
-Tests pass in: Safari 5, Google Chrome, FF 3.5
+Tests pass in: Safari 5, Google Chrome, FF 3.5, Opera 9
 
-I'll add more as I get around to running the tests on other browsers.
+I'm expecting browser support to be very good.  I'll add more as I get around to running the tests on other browsers.
 
 Feedback appreciated as always.
