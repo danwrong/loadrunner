@@ -1,1 +1,1 @@
-var loadedA = true;
+loadedA = true;
