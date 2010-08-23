@@ -68,14 +68,14 @@ On demand feature loading:
     
 Make a module out of jQuery:
 
-  module('jquery', require('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function(exports) {
-    var jquery = jQuery.noConflict(true);
-    exports.__all__ = jquery;
-  }));
+    module('jquery', require('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function(exports) {
+      var jquery = jQuery.noConflict(true);
+      exports.__all__ = jquery;
+    }));
   
-  require('jquery', function(jq) {
-    jq('body').append('<h1>Goddamn this is good</h1>');
-  });
+    require('jquery', function(jq) {
+      jq('body').append('<h1>Goddamn this is good</h1>');
+    });
 
     
 Building Combined Files
