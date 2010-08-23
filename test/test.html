@@ -155,7 +155,7 @@
           require('javascripts/b.js', function() {
             require('moda', function() {
               deepEqual(
-                ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'], require.loaded,
+                ['javascripts/a.js', 'javascripts/b.js', 'moda'], require.loaded,
                 'require.loaded has files in correct order');
               start();
             });
