@@ -55,6 +55,16 @@ To use a module:
     require('myshit', function(myshit) {
       myshit.myShitMethod();
     });
+    
+On demand feature loading:
+
+    function activateUberFeature() {
+      require('uber', function(uber) {
+        uber.activate();
+      });
+    }
+    
+    $('#thing').click(activateUberFeature);
 
     
 Building Combined Files
