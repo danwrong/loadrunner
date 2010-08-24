@@ -1,4 +1,4 @@
-Asyncronous JavaScript Loader and Dependency Manager (Funky Name TBC)
+loadrunner.js (Browser-based JavaScript dependency loader, builder and more)
 ---------------------------------------------------------------------
 
 (c) Dan Webb (dan@massiverobot.co.uk) 2010 under an MIT Licence (attached)
@@ -84,7 +84,7 @@ Building Combined Files
 
 This is still in its early stages so its bound to change and/or be slightly awkard to work with but here are the basics:
 
-    Usage: build {options} {source_file_or_module} {destination_file}
+    Usage: loadbuilder {options} {source_file_or_module} {destination_file}
            --no-min                      disable minification
            --with-modulejs               embed module.js
            --modules=path                path to unbuilt modules
