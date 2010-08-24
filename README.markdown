@@ -86,7 +86,7 @@ This is still in its early stages so its bound to change and/or be slightly awka
 
     Usage: loadbuilder {options} {source_file_or_module} {destination_file}
            --no-min                      disable minification
-           --with-modulejs               embed module.js
+           --with-loadrunner             embed loadrunner.js
            --modules=path                path to unbuilt modules
            --docRoot=path                path to / (your sites web root)
            --cwd=path                    path to current directory if you use relative paths
