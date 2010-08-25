@@ -37,14 +37,20 @@ Starts to load the dependencies specified in parallel returning a promise that w
     
 Set this property to the base URL of your modules.  Set to the current directory by default.
 
-Creating and Requiring Modules
-------------------------------
-
-TODO
-
 Requiring Regular Script Files
 ------------------------------
 
+You can use the require function to load any number of scripts in parallel.  There are no restrictions at all on what type or location the script is.  If you can reference it with a script tag you can require it with loadrunner.  You can also use loadbuilder against regular files effectively.
+
+Creating and Requiring Modules
+------------------------------
+
+Writing code as modules has a number of advantages over just requiring regular scripts:
+
+  1. It encourages libraries to be self contained and only export what they need to.
+  2. It allows loadrunner to work out the loading and building of complex nested dependency trees for you.
+  3. It negates the need for multi.level.namespaces as exports are only available when a require call makes them available.
+  
 TODO
 
 Tests
