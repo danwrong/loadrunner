@@ -37,6 +37,16 @@ Starts to load the dependencies specified in parallel returning a promise that w
     
 Set this property to the base URL of your modules.  Set to the current directory by default.
 
+Creating and Requiring Modules
+------------------------------
+
+TODO
+
+Requiring Regular Script Files
+------------------------------
+
+TODO
+
 Tests
 -----
 
