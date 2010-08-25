@@ -18,6 +18,25 @@ The aim is to create an asyncronous loader/dependency manager for use in the bro
 * Be as close to CommonJS as possible - but not be afraid to change things where it makes sense to do so
 * Self contained modules - modules should have their own scope and export only explicitly defined values in the style of CommonJS require
 
+API
+---
+
+    load(path[, callback])
+    
+Starts loading the specified file and returns a promise that will be triggered when the file has loaded.  If callback is specified it will be added to the promise.  Note that calling load multiple times for the same file will load it multiple times.
+
+    module(name, factory)
+    
+Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export), a function which takes the exports object as an argument so you can add properties or a promise (usually the result of a require statement).  In this case once the promise has completed the callbacks will be passed the exports object to attach exported values.  See examples for more details.
+
+    require(dep1, dep2, debN... [, callback])
+    
+Starts to load the dependencies specified in parallel returning a promise that will complete when all the dependencies are loaded.  Each dependency can either be a normal script file URL or a module reference.  If modules are required there exports object will be passed into any callbacks as arguments so they can be used within the callback.  Note that if a file or module has been required before it will not be reloaded.
+
+    require.modulePath
+    
+Set this property to the base URL of your modules.  Set to the current directory by default.
+
 Tests
 -----
 
