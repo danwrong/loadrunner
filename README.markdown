@@ -76,7 +76,7 @@ To require several scripts and then execute code:
 To define a module with dependencies:
 
     module('myshit', 
-      require('utils', 'dom', function(utils, dom) {
+      require('utils', 'dom', function(utils, dom, exports) {
         
         exports.myShitMethod = function() {
           dom.get('thing');
