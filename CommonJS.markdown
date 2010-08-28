@@ -1,7 +1,9 @@
 CommonJS Transport
 ------------------
 
-Sample:
+It's possible to easily wrap CommonJS style modules in a loadrunner "transport" so that it can be built and work in the browser.
+
+Here's an example:
 
     (function() {
       var module = require.module('md5', 
@@ -146,6 +148,12 @@ Sample:
       );
     }());
     
+    
+TODO
+----
+
+  * Wrapping script
+  * Work out possible relative path problems
     
 Wrapping process:
 
