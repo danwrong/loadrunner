@@ -3,7 +3,7 @@ CommonJS Transport
 
 Sample:
 
-    module('uri', 
+    module('md5', 
       require('./util', './struct', function(util, struct, exports, require) {
         var util = require('./util');
         var struct = require('./struct');
@@ -146,6 +146,6 @@ Sample:
     
 Wrapping process:
 
-1. Collect required modules (via regexp or evaluation?)
-2. add module declaration with require (fill out require args will placeholders)
-3. Insert module code into body
+  1. Collect required modules (via regexp or evaluation?)
+  2. add module declaration with require (fill out require args will placeholders)
+  3. Insert module code into body 

@@ -14,7 +14,7 @@
     <ol id="qunit-tests"></ol>
     
     <script type="text/javascript" charset="utf-8">
-      require.modulePath = 'modules/';
+      require.paths = ['modules/'];
       
       QUnit.module('load');
       
@@ -22,7 +22,7 @@
         expect(2);
         stop(1000);
         
-        load('javascripts/a.js', function(file) {
+        require.load('javascripts/a.js', function(file) {
           ok(loadedA, 'a.js was executed');
           equal('javascripts/a.js', file, 'load callback passes filename');
           start();
