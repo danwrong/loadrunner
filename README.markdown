@@ -21,11 +21,11 @@ The aim is to create an asyncronous loader/dependency manager for use in the bro
 API
 ---
 
-    load(path[, callback])
+    require.load(path[, callback])
     
 Starts loading the specified file and returns a promise that will be triggered when the file has loaded.  If callback is specified it will be added to the promise.  Note that calling load multiple times for the same file will load it multiple times.
 
-    module(name, factory)
+    require.module(name, factory)
     
 Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export), a function which takes the exports object as an argument so you can add properties or a promise (usually the result of a require statement).  In this case once the promise has completed the callbacks will be passed the exports object to attach exported values.  See examples for more details.
 
@@ -33,9 +33,9 @@ Creates and returns a new module with the specified name.  factory can either be
     
 Starts to load the dependencies specified in parallel returning a promise that will complete when all the dependencies are loaded.  Each dependency can either be a normal script file URL or a module reference.  If modules are required there exports object will be passed into any callbacks as arguments so they can be used within the callback.  Note that if a file or module has been required before it will not be reloaded.
 
-    require.modulePath
+    require.paths = ["modulePath"]
     
-Set this property to the base URL of your modules.  Set to the current directory by default.
+Set the first element of this property to the base URL of your modules.  Set to the current directory by default. NB.  loadrunner does not search multiple paths for modules at this time.  This property takes an array for CommonJS compatibility.
 
 Requiring Regular Script Files
 ------------------------------
@@ -75,7 +75,7 @@ To require several scripts and then execute code:
     
 To define a module with dependencies:
 
-    module('myshit', 
+    require.module('myshit', 
       require('utils', 'dom', function(utils, dom, exports) {
         
         exports.myShitMethod = function() {
@@ -104,7 +104,7 @@ On demand feature loading:
     
 Make a module out of jQuery:
 
-    module('jquery', require('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function(exports) {
+    require.module('jquery', require('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function(exports) {
       var jquery = jQuery.noConflict(true);
       exports.__all__ = jquery;
     }));

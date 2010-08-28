@@ -32,14 +32,14 @@
       QUnit.module('module');
       
       QUnit.test('should be able to define a module with an object literal', function() {
-        var mod = module('test', { a: 1, b: 'thing' });
+        var mod = require.module('test', { a: 1, b: 'thing' });
         
         equals(1, mod.exports.a, 'exports.a set');
         equals('thing', mod.exports.b, 'exports.b set');
       });
       
       QUnit.test('should be able to define a with a function', function() {
-        var mod = module('test', function(exports) {
+        var mod = require.module('test', function(exports) {
           exports.a = 1;
           exports.b = 'thing';
         });

@@ -1,3 +1,3 @@
-module('moda', {
+require.module('moda', {
   test: 'success'
 });
