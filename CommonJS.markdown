@@ -6,7 +6,7 @@ It's possible to easily wrap CommonJS style modules in a loadrunner "transport" 
 Here's an example:
 
     (function() {
-      var module = require.module('md5', 
+      var module = require.module('md5',
         require('./util', './struct', function(util, struct, exports, require) {
           var util = require('./util');
           var struct = require('./struct');
@@ -147,16 +147,17 @@ Here's an example:
         })
       );
     }());
-    
-    
+
+
 TODO
 ----
 
   * Wrapping script
-  * Work out possible relative path problems
-    
+  * Work out relative paths
+
 Wrapping process:
 
   1. Collect required modules (via regexp or evaluation?)
-  2. add module declaration with require (fill out require args will placeholders)
-  3. Insert module code into body 
+  2. Expand out relative require reference
+  3. add module declaration with require (fill out require args will placeholders)
+  4. Insert module code into body
