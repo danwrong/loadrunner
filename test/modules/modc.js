@@ -1,5 +1,9 @@
-require.module('modc', require('moda', function(moda, exports) {
-  exports.test = function() {
-    return moda.test + ' from mod a';
-  };
-}));
+module('modc', function(exports) {
+  require('moda', function(moda) {
+    exports({
+      test: function() {
+        return moda.test + ' from mod a';
+      }
+    });
+  });
+});

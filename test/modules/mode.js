@@ -1,5 +1,9 @@
-require.module('mode', require('javascripts/d.js', function(exports) {
-  exports.test = function() {
-    return loadedD;
-  };
-}));
+module('mode', function(exports) {
+  require('javascripts/d.js', function() {
+    exports({
+      test: function() {
+        return loadedD;
+      }
+    });
+  });
+});
