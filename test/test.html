@@ -200,6 +200,26 @@
           });
         });
       });
+      
+      QUnit.module('no conflict');
+
+      QUnit.test('should remove self from the window object if no conflict is called', function() {
+        loadrunner.noConflict();
+        
+        equals(window.require, undefined, 'require should be removed');
+        equals(window.module, undefined, 'module should be removed');
+        
+        ok(loadrunner.require, 'require should be on loadrunner function');
+      });
+      
+      QUnit.test('should remove self from the window object and kill loadrunner if no conflict at all is called', function() {
+        var l = loadrunner.noConflict(true);
+        
+        equals(window.require, undefined, 'require should be removed');
+        equals(window.module, undefined, 'module should be removed');
+        
+        ok(l.require, 'require should be on l');
+      });
 
     </script>
   </body>
