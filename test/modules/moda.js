@@ -1,3 +1,3 @@
-module('moda', {
+provide('moda', {
   test: 'success'
 });

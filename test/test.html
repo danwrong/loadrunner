@@ -14,7 +14,7 @@
     <ol id="qunit-tests"></ol>
 
     <script type="text/javascript" charset="utf-8">
-      require.path = 'modules';
+      using.path = 'modules';
 
       QUnit.module('load');
 
@@ -22,7 +22,7 @@
         expect(2);
         stop(1000);
 
-        require.load('javascripts/a.js', function(file) {
+        using.load('javascripts/a.js', function(file) {
           ok(loadedA, 'a.js was executed');
           equal('javascripts/a.js', file, 'load callback passes filename');
           start();
@@ -32,14 +32,14 @@
       QUnit.module('module');
 
       QUnit.test('should be able to define a module with an object literal', function() {
-        var mod = module('test', { a: 1, b: 'thing' });
+        var mod = provide('test', { a: 1, b: 'thing' });
 
         equals(1, mod.exports.a, 'exports.a set');
         equals('thing', mod.exports.b, 'exports.b set');
       });
 
       QUnit.test('should be able to define with a function', function() {
-        var mod = module('test', function(export) {
+        var mod = provide('test', function(export) {
           export({
             a: 1,
             b: 'thing'
@@ -58,7 +58,7 @@
 
         loadedA = false;
 
-        require('javascripts/a.js', function() {
+        using('javascripts/a.js', function() {
           ok(loadedA, 'a.js was executed');
           start();
         });
@@ -68,7 +68,7 @@
         expect(2);
         stop(1000);
 
-        require('javascripts/c.js', 'javascripts/d.js', function() {
+        using('javascripts/c.js', 'javascripts/d.js', function() {
           ok(loadedC, 'c.js was executed');
           ok(loadedD, 'd.js was executed');
           start();
@@ -81,10 +81,10 @@
 
         bLoadCount = 0;
 
-        require('javascripts/b.js', function() {
+        using('javascripts/b.js', function() {
           ok(bLoadCount, 'b.js was executed');
 
-          require('javascripts/b.js', function() {
+          using('javascripts/b.js', function() {
             equal(1, bLoadCount, 'b.js was not loaded again');
             start();
           });
@@ -98,7 +98,7 @@
         expect(1);
         stop(1000);
 
-        require('moda', function(moda) {
+        using('moda', function(moda) {
           equals('success', moda.test, 'module exports loaded');
           start();
         });
@@ -108,7 +108,7 @@
         expect(2);
         stop(1000);
 
-        require('moda', 'modb', function(moda, modb) {
+        using('moda', 'modb', function(moda, modb) {
           equals('success', moda.test, 'moda exports loaded');
           equals('success', modb.test(), 'modb exports loaded');
           start();
@@ -119,7 +119,7 @@
         expect(1);
         stop(1000);
 
-        require('modc', function(modc) {
+        using('modc', function(modc) {
           equals('success from mod a', modc.test(), 'modc exports loaded');
           start();
         });
@@ -129,7 +129,7 @@
         expect(1);
         stop(1000);
 
-        require('modd', function(modd) {
+        using('modd', function(modd) {
           equals('success from mod a via mod d', modd.test(), 'modd exports loaded');
           start();
         });
@@ -139,7 +139,7 @@
         expect(1);
         stop(1000);
 
-        require('mode', function(mode) {
+        using('mode', function(mode) {
           ok(mode.test(), 'mode ensured d.js was loaded');
           start();
         });
@@ -149,7 +149,7 @@
         expect(1);
         stop(1000);
 
-        require('mode', function(mode) {
+        using('mode', function(mode) {
           ok(mode.test(), 'mode ensured d.js was loaded');
           start();
         });
@@ -159,7 +159,7 @@
         expect(1);
         stop(1000);
 
-        require('sub/modsubfolder', function(modsubfolder) {
+        using('sub/modsubfolder', function(modsubfolder) {
           ok(modsubfolder.test(), 'mode ensured d.js was loaded');
           start();
         });
@@ -168,16 +168,16 @@
       QUnit.module('require.loaded');
 
       QUnit.test('should list files loaded in order', function() {
-        require.reset();
+        using.reset();
 
         expect(1);
         stop(1000);
 
-        require('javascripts/a.js', function() {
-          require('javascripts/b.js', function() {
-            require('moda', function() {
+        using('javascripts/a.js', function() {
+          using('javascripts/b.js', function() {
+            using('moda', function() {
               deepEqual(
-                ['javascripts/a.js', 'javascripts/b.js', 'moda'], require.loaded,
+                ['javascripts/a.js', 'javascripts/b.js', 'moda'], using.loaded,
                 'require.loaded has files in correct order');
               start();
             });
@@ -188,37 +188,17 @@
       QUnit.module('built files');
 
       QUnit.test('should correctly execute code from built file', function() {
-        require.reset();
+        using.reset();
 
         expect(1);
         stop(1000);
 
-        require('javascripts/compiled.js', function() {
-          require('modcompiled', function(modd) {
+        using('javascripts/compiled.js', function() {
+          using('modcompiled', function(modd) {
             equals(modd.test(), 'success from mod a via modcompiled', 'modd exports loaded');
             start();
           });
         });
-      });
-      
-      QUnit.module('no conflict');
-
-      QUnit.test('should remove self from the window object if no conflict is called', function() {
-        loadrunner.noConflict();
-        
-        equals(window.require, undefined, 'require should be removed');
-        equals(window.module, undefined, 'module should be removed');
-        
-        ok(loadrunner.require, 'require should be on loadrunner function');
-      });
-      
-      QUnit.test('should remove self from the window object and kill loadrunner if no conflict at all is called', function() {
-        var l = loadrunner.noConflict(true);
-        
-        equals(window.require, undefined, 'require should be removed');
-        equals(window.module, undefined, 'module should be removed');
-        
-        ok(l.require, 'require should be on l');
       });
 
     </script>

@@ -1,5 +1,5 @@
-module('modcompiled', function(exports) {
-  require('modc', function(modc) {
+provide('modcompiled', function(exports) {
+  using('modc', function(modc) {
     exports({
       test: function() {
         return modc.test() + ' via modcompiled';

@@ -1,5 +1,5 @@
-module('mode', function(exports) {
-  require('javascripts/d.js', function() {
+provide('mode', function(exports) {
+  using('javascripts/d.js', function() {
     exports({
       test: function() {
         return loadedD;

@@ -21,26 +21,26 @@ The aim is to create an asyncronous loader/dependency manager for use in the bro
 API
 ---
 
-    require.load(path[, callback])
-    
+    using.load(path[, callback])
+
 Starts loading the specified file and returns a promise that will be triggered when the file has loaded.  If callback is specified it will be added to the promise.  Note that calling load multiple times for the same file will load it multiple times.
 
-    require.module(name, factory)
-    
-Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export), a function which takes the exports object as an argument so you can add properties or a promise (usually the result of a require statement).  In this case once the promise has completed the callbacks will be passed the exports object to attach exported values.  See examples for more details.
+    provides(name, factory)
 
-    require(dep1, dep2, debN... [, callback])
-    
+Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export), a function which takes the exports function as an argument so you can export properties asyncronously (normally ). See examples for details.
+
+    using(dep1, dep2, debN... [, callback])
+
 Starts to load the dependencies specified in parallel returning a promise that will complete when all the dependencies are loaded.  Each dependency can either be a normal script file URL or a module reference.  If modules are required there exports object will be passed into any callbacks as arguments so they can be used within the callback.  Note that if a file or module has been required before it will not be reloaded.
 
-    require.path = "modulePath"
-    
-Set the first element of this property to the base URL of your modules.  Set to the current directory by default. NB.  loadrunner does not search multiple paths for modules at this time.  This property takes an array for CommonJS compatibility.
+    using.path = "modulePath"
+
+Set the first element of this property to the base URL of your modules.  Set to the current directory by default.
 
 Requiring Regular Script Files
 ------------------------------
 
-You can use the require function to load any number of scripts in parallel.  There are no restrictions at all on what type or location the script is.  If you can reference it with a script tag you can require it with loadrunner.  You can also use loadbuilder against regular files effectively.
+You can use the using function to load any number of scripts in parallel.  There are no restrictions at all on what type or location the script is.  If you can reference it with a script tag you can require it with loadrunner.  You can also use loadbuilder against regular files effectively.
 
 Creating and Requiring Modules
 ------------------------------
@@ -49,8 +49,8 @@ Writing code as modules has a number of advantages over just requiring regular s
 
   1. It encourages libraries to be self contained and only export what they need to.
   2. It allows loadrunner to work out the loading and building of complex nested dependency trees for you.
-  3. It negates the need for multi.level.namespaces as exports are only available when a require call makes them available.
-  
+  3. It negates the need for multi.level.namespaces as exports are only available when a using call makes them available.
+
 TODO
 
 Tests
@@ -64,7 +64,7 @@ Examples
 
 To require several scripts and then execute code:
 
-    require(
+    using(
       'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js',
       '/javascripts/application.js', function() {
         jQuery(function() {
@@ -72,48 +72,51 @@ To require several scripts and then execute code:
         });
       }
     );
-    
+
 To define a module with dependencies:
 
-    require.module('myshit', 
-      require('utils', 'dom', function(utils, dom, exports) {
-        
-        exports.myShitMethod = function() {
-          dom.get('thing');
-          utils.map([1,2], function(i) { return i * 2; });
-        };
-        
-      })
-    );
-    
+    provide('myshit', function(exports) {
+      using('utils', 'dom', function(utils, dom) {
+
+        exports({
+          myShitMethod: function() {
+            dom.get('thing');
+            utils.map([1,2], function(i) { return i * 2; });
+          }
+        });
+
+      });
+    });
+
 To use a module:
 
-    require('myshit', function(myshit) {
+    using('myshit', function(myshit) {
       myshit.myShitMethod();
     });
-    
+
 On demand feature loading:
 
     function activateUberFeature() {
-      require('uber', function(uber) {
+      using('uber', function(uber) {
         uber.activate();
       });
     }
-    
+
     $('#thing').click(activateUberFeature);
-    
+
 Make a module out of jQuery:
 
-    require.module('jquery', require('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function(exports) {
-      var jquery = jQuery.noConflict(true);
-      exports.__all__ = jquery;
-    }));
-  
-    require('jquery', function(jq) {
+    provide('jquery', function(exports) {
+      using('http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', function() {
+        exports(jQuery.noConflict(true));
+      });
+    });
+
+    using('jquery', function(jq) {
       jq('body').append('<h1>Goddamn this is good</h1>');
     });
 
-    
+
 Building Combined Files
 -----------------------
 
