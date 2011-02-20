@@ -47,8 +47,8 @@
       });
 
       QUnit.test('should be able to define with a function', function() {
-        var mod = provide('test', function(export) {
-          export({
+        var mod = provide('test', function(exports) {
+          exports({
             a: 1,
             b: 'thing'
           });
