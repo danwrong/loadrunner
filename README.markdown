@@ -6,12 +6,12 @@ loadrunner.js (Browser-based JavaScript dependency loader, builder and more)
 Overview
 --------
 
-The aim is to create an asyncronous loader/dependency manager for use in the browser that forfills a number of requirements:
+The aim is to create an asynchronous loader/dependency manager for use in the browser that for fills a number of requirements:
 
 * Plain old JavaScript - No server side components required at all and be JS lib agnostic
 * Can load any script -  Rather than requiring all files to adhere to a 'package' convention, in its simplest form it must allow you to load any javascript file
 * Uses script tags - so scripts can be loaded from any domain
-* Asyncronous - Must allow developers fine control over the parallel or serial loading of their files and order of execution
+* Asynchronous - Must allow developers fine control over the parallel or serial loading of their files and order of execution
 * Rely on convention rather than configuration - dependency configuration files should not need to be generated, rather if the developer sticks to some simple, sensible conventions things just work out of the box
 * Allow (and facility with built in tools) very robust bundling for production builds - while allowing developers to load dynamically in development.  These tools will not be based on fragile static analysis but by really executing the code and reading out the load order.
 * Facilitate on demand loading - Along side loadtime dependency definition, allow developers to require files as and when needed
