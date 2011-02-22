@@ -12,37 +12,51 @@ The aim is to create an asyncronous loader/dependency manager for use in the bro
 * Can load any script -  Rather than requiring all files to adhere to a 'package' convention, in its simplest form it must allow you to load any javascript file
 * Uses script tags - so scripts can be loaded from any domain
 * Asyncronous - Must allow developers fine control over the parallel or serial loading of their files and order of execution
-* Rely on convention rather than configuration - dependency configration files should not need to be generated, rather if the developer sticks to some simple, sensible conventions things just work out of the box
+* Rely on convention rather than configuration - dependency configuration files should not need to be generated, rather if the developer sticks to some simple, sensible conventions things just work out of the box
 * Allow (and facility with built in tools) very robust bundling for production builds - while allowing developers to load dynamically in development.  These tools will not be based on fragile static analysis but by really executing the code and reading out the load order.
 * Facilitate on demand loading - Along side loadtime dependency definition, allow developers to require files as and when needed
-* Be as close to CommonJS as possible - but not be afraid to change things where it makes sense to do so
 * Self contained modules - modules should have their own scope and export only explicitly defined values in the style of CommonJS require
 
 API
 ---
 
-    using.load(path[, callback])
+    using.path = "modulePath"
 
-Starts loading the specified file and returns a promise that will be triggered when the file has loaded.  If callback is specified it will be added to the promise.  Note that calling load multiple times for the same file will load it multiple times.
+Set this property to the base URL of your modules.  Set to the directory loadrunner.js is in by default.
+
+    using(dep1, dep2, debN... [, callback]) => Promise
+
+Loads (if not previously loaded) the specified dependencies, which can be regular JavaScript files or modules.  When all are complete the callback is called passing each module's exports as arguments.  For example:
+
+    using('util', 'dom/events', function(util, events) {
+      util.isArray([1,2]);
+      events.on('something', function() { });
+    });
+
+Also, using calls return a promise object so you can attach multiple callbacks at any time:
+
+    var loadLibs = using('/js/jquery.js', '/js/underscore.js');
+
+    loadLibs.then(function() {
+      // some stuff using the scripts
+    });
+
+    loadLibs.then(function() {
+      // some other stuff
+    });
+
+Finally, if you just want to parallel load several scripts before you use them then you can call using to start them loading then just depend on them when you need them. See examples for more info.
 
     provides(name, factory)
 
-Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export), a function which takes the exports function as an argument so you can export properties asyncronously (normally ). See examples for details.
-
-    using(dep1, dep2, debN... [, callback])
-
-Starts to load the dependencies specified in parallel returning a promise that will complete when all the dependencies are loaded.  Each dependency can either be a normal script file URL or a module reference.  If modules are required there exports object will be passed into any callbacks as arguments so they can be used within the callback.  Note that if a file or module has been required before it will not be reloaded.
-
-    using.path = "modulePath"
-
-Set the first element of this property to the base URL of your modules.  Set to the current directory by default.
+Creates and returns a new module with the specified name.  factory can either be an object literal (in which case the object will be the module's export) ro a function which takes the exports function as an argument so you can export properties asyncronously (normally after a using call completes to load your dependencies). See examples for details.
 
 Requiring Regular Script Files
 ------------------------------
 
 You can use the using function to load any number of scripts in parallel.  There are no restrictions at all on what type or location the script is.  If you can reference it with a script tag you can require it with loadrunner.  You can also use loadbuilder against regular files effectively.
 
-Creating and Requiring Modules
+Creating and Using Modules
 ------------------------------
 
 Writing code as modules has a number of advantages over just requiring regular scripts:
@@ -51,7 +65,9 @@ Writing code as modules has a number of advantages over just requiring regular s
   2. It allows loadrunner to work out the loading and building of complex nested dependency trees for you.
   3. It negates the need for multi.level.namespaces as exports are only available when a using call makes them available.
 
-TODO
+To create a module:
+
+TBC
 
 Tests
 -----

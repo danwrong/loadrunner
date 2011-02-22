@@ -2,10 +2,10 @@
 
 var loadBase = using('javascripts/util', 'javascripts/dom');
 
-loadBase.then(function() {
+loadBase.addCallback(function() {
   // executed when files loaded
 });
 
-loadBase.then(function() {
+loadBase.addCallback(function() {
   // add another dependency on these scripts elsewhere in your code
 });
