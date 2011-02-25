@@ -132,7 +132,7 @@
       script.onload = fileLoaded;
 
       script.onerror = function() {
-        throw new Error(file + ' not loaded');
+        throw file + ' not loaded';
       }
 
       script.onreadystatechange = function () {
@@ -197,7 +197,7 @@
     function moduleFileLoadedCallback(name, path) {
       return function() {
         if (!modules[name]) {
-          throw new Error("File " + path + " does not provide module " + name);
+          throw "File " + path + " does not provide module " + name;
         }
 
         modules[name].addCallback(function() {
