@@ -15,16 +15,16 @@
 
     <script type="text/javascript" charset="utf-8">
       QUnit.module('script tag options');
-      
-      QUnit.test('should be able to set load path with data-path', function() {
-        equal('modules', using.path);
-      });
-      
-      QUnit.test('should load main if set with data-main', function() {
-        ok(mainLoaded, 'main should be loaded');
-      });
 
-      QUnit.module('load');
+        QUnit.test('should be able to set load path with data-path', function() {
+          equal('modules', using.path);
+        });
+
+        QUnit.test('should load main if set with data-main', function() {
+          ok(mainLoaded, 'main should be loaded');
+        });
+
+        QUnit.module('load');
 
       QUnit.test('should load a file and execute callback', function() {
         expect(2);
@@ -64,14 +64,12 @@
         expect(1);
         stop(1000);
 
-        loadedA = false;
-
-        using('javascripts/a.js', function() {
-          ok(loadedA, 'a.js was executed');
+        using('javascripts/e.js', function() {
+          ok(loadedA, 'e.js was executed');
           start();
         });
       });
-      
+
       QUnit.test('should require a file prefixed with $ from using.path', function() {
         expect(1);
         stop(1000);
@@ -197,7 +195,7 @@
           using('javascripts/b.js', function() {
             using('moda', function() {
               deepEqual(
-                ['javascripts/a.js', 'javascripts/b.js', 'moda'], using.loaded,
+                using.loaded, ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'],
                 'require.loaded has files in correct order');
               start();
             });
