@@ -1,4 +1,4 @@
-provide('mode', function(exports) {
+provide(function(exports) {
   using('javascripts/d.js', function() {
     exports({
       test: function() {

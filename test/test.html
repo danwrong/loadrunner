@@ -16,34 +16,25 @@
     <script type="text/javascript" charset="utf-8">
       QUnit.module('script tag options');
 
-        QUnit.test('should be able to set load path with data-path', function() {
-          equal('modules', using.path);
-        });
+      QUnit.test('should be able to set load path with data-path', function() {
+        equal('modules', using.path);
+      });
 
-        QUnit.test('should load main if set with data-main', function() {
-          ok(mainLoaded, 'main should be loaded');
-        });
-
-        QUnit.module('load');
-
-      QUnit.test('should load a file and execute callback', function() {
-        expect(2);
-        stop(1000);
-
-        using.load('javascripts/a.js', function(file) {
-          ok(loadedA, 'a.js was executed');
-          equal('javascripts/a.js', file, 'load callback passes filename');
-          start();
-        });
+      QUnit.test('should load main if set with data-main', function() {
+        ok(mainLoaded, 'main should be loaded');
       });
 
       QUnit.module('module');
 
       QUnit.test('should be able to define a module with an object literal', function() {
-        var mod = provide('test', { a: 1, b: 'thing' });
+        expect(2);
+        stop(200);
 
-        equals(1, mod.exports.a, 'exports.a set');
-        equals('thing', mod.exports.b, 'exports.b set');
+        provide('test', { a: 1, b: 'thing' }).then(function(mod) {
+          equals(1, mod.a, 'exports.a set');
+          equals('thing', mod.b, 'exports.b set');
+          start();
+        });
       });
 
       QUnit.test('should be able to define with a function', function() {
@@ -54,8 +45,14 @@
           });
         });
 
-        equals(1, mod.exports.a, 'exports.a set');
-        equals('thing', mod.exports.b, 'exports.b set');
+        expect(2);
+        stop(200);
+
+        mod.then(function() {
+          equals(1, mod.exports.a, 'exports.a set');
+          equals('thing', mod.exports.b, 'exports.b set');
+          start();
+        });
       });
 
       QUnit.module('require - file');
@@ -65,7 +62,7 @@
         stop(1000);
 
         using('javascripts/e.js', function() {
-          ok(loadedA, 'e.js was executed');
+          ok(loadedE, 'e.js was executed');
           start();
         });
       });
@@ -183,10 +180,11 @@
         });
       });
 
-      QUnit.module('require.loaded');
+      QUnit.module('loadrunner.Script.loaded');
 
       QUnit.test('should list files loaded in order', function() {
-        using.reset();
+        loadrunner.Script.loaded = [];
+        loadrunner.Module.exports = {};
 
         expect(1);
         stop(1000);
@@ -195,7 +193,7 @@
           using('javascripts/b.js', function() {
             using('moda', function() {
               deepEqual(
-                using.loaded, ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'],
+                loadrunner.Script.loaded, ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'],
                 'require.loaded has files in correct order');
               start();
             });
@@ -206,7 +204,8 @@
       QUnit.module('built files');
 
       QUnit.test('should correctly execute code from built file', function() {
-        using.reset();
+        loadrunner.Script.loaded = [];
+        loadrunner.Module.exports = {};
 
         expect(1);
         stop(1000);

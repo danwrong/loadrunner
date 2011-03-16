@@ -1,3 +1,3 @@
-provide('moda', {
+provide({
   test: 'success'
 });

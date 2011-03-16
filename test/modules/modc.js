@@ -1,4 +1,4 @@
-provide('modc', function(exports) {
+provide(function(exports) {
   using('moda', function(moda) {
     exports({
       test: function() {

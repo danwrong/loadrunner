@@ -1,4 +1,4 @@
-provide('modb', function(exports) {
+provide(function(exports) {
   exports({
     test: function() {
       return 'success';

@@ -1,4 +1,4 @@
-provide('sub/modsubfolder', function(exports) {
+provide(function(exports) {
   using('javascripts/d.js', 'modd', function(modd) {
     exports({
       test: function() {
