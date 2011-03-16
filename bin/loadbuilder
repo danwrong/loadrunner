@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-MODULE_PATH=$0/../..
-java -jar $MODULE_PATH/vendor/js.jar -opt -1 $MODULE_PATH/lib/loadbuilder.js $MODULE_PATH $1 $2 $3 $4 $5 $6 $7 $8 $9
