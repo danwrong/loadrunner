@@ -201,6 +201,19 @@
         });
       });
 
+      QUnit.module('Sequences');
+
+      QUnit.test('should use dependencies in sequence if array argument', function() {
+        window.testSeq = [];
+        expect(1);
+        stop(1000);
+
+        using(['javascripts/s1.js', 'javascripts/s2.js', 'javascripts/s3.js'], function() {
+          deepEqual(window.testSeq, [1,2,3], 'scripts executed in sequence');
+          start();
+        });
+      });
+
       QUnit.module('built files');
 
       QUnit.test('should correctly execute code from built file', function() {
