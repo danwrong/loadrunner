@@ -234,10 +234,11 @@
          });
 
 
+         QUnit.module('@deds bug');
+
          QUnit.test('should be able to load a static script inside a module', function() {
-           // bug identified by @ded
            expect(3);
-           stop(1000);
+           stop(6000);
 
            using('ded-b1', function (b1) {
              equals(b1, true, 'load module containing static script');
@@ -250,7 +251,7 @@
            using('ded-a', function (a) {
              equals(a, true, 'load module containing module containing module containing static script');
              start();
-           });
+            });
          });
 
      }
@@ -266,10 +267,6 @@
           a.setAttribute('data-main', 'javascripts/main.js');
 
           a.onload = runTests;
-
-          a.onerror = function() {
-            throw new Error(me.path + ' not loaded');
-          }
 
           a.onreadystatechange = function () {
             if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
