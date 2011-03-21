@@ -14,6 +14,8 @@
 
     <script type="text/javascript" charset="utf-8">
      function runTests() {
+
+
         QUnit.module('script tag options');
 
          QUnit.test('should be able to set load path with data-path', function() {
@@ -230,6 +232,27 @@
              });
            });
          });
+
+
+         QUnit.test('should be able to load a static script inside a module', function() {
+           // bug identified by @ded
+           expect(3);
+           stop(1000);
+
+           using('ded-b1', function (b1) {
+             equals(b1, true, 'load module containing static script');
+             start();
+           });
+           using('ded-b2', function (b2) {
+             equals(b2, true, 'load module containing module containing static script');
+             start();
+           });
+           using('ded-a', function (a) {
+             equals(a, true, 'load module containing module containing module containing static script');
+             start();
+           });
+         });
+
      }
     </script>
 
