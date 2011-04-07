@@ -233,27 +233,64 @@
            });
          });
 
+          QUnit.module('AMD support');
 
-         QUnit.module('@deds bug');
+          QUnit.test('should load an AMD module defined with an object literal', function() {
+            expect(1);
+            stop(2000);
 
-         QUnit.test('should be able to load a static script inside a module', function() {
-           expect(3);
-           stop(6000);
-
-           using('ded-b1', function (b1) {
-             equals(b1, true, 'load module containing static script');
-             start();
-           });
-           using('ded-b2', function (b2) {
-             equals(b2, true, 'load module containing module containing static script');
-             start();
-           });
-           using('ded-a', function (a) {
-             equals(a, true, 'load module containing module containing module containing static script');
-             start();
+            using('amd/modlit', function(a) {
+              equals(a.test, 'success', 'loaded mod defined object literal');
+              start();
             });
-         });
+          });
 
+
+          QUnit.test('should load an AMD module defined with a function', function() {
+            expect(1);
+            stop(2000);
+
+            using('amd/modnodep', function(a) {
+              equals(a.test, 'success', 'loaded mod defined with function');
+              start();
+            });
+          });
+
+          QUnit.test('should load an AMD module with dependencies', function() {
+            expect(1);
+            stop(2000);
+
+            using('amd/moda', function(a) {
+              equals(a.moda, 'success', 'loaded mod with dependencies');
+              start();
+            });
+          });
+
+          QUnit.test('should load an AMD module with relative dependencies', function() {
+            expect(1);
+            stop(2000);
+
+            using('amd/modrel', function(a) {
+              equals(a.modb, 'AMD success', 'loaded mod with relative dependencies');
+              start();
+            });
+          });
+
+          QUnit.test('should be able to use require and exports in AMD module', function() {
+            expect(1);
+            stop(2000);
+
+            var mod = define(['require', 'exports', 'modb'], function(require, exports) {
+              var modb = require('modb');
+
+              exports.modb = modb.test();
+            });
+
+            mod.then(function(e) {
+              equals(e.modb, 'success');
+              start();
+            });
+          });
      }
     </script>
 
