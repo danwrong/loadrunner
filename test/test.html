@@ -312,7 +312,7 @@
             }
           };
 
-          document.getElementById('qunit-header').innerHTML += ' (' + a.src.match(/(dist|lib)/)[1] + ')';
+          document.getElementById('qunit-header').innerHTML += ' (' + a.src.match(/(dist|src)/)[1] + ')';
 
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(a, s);

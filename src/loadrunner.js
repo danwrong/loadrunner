@@ -1,6 +1,5 @@
-(function(context) {
-  var document = context.document,
-      scripts = document.getElementsByTagName('script'),
+(function(context, document) {
+  var scripts = document.getElementsByTagName('script'),
       scriptTag, scriptTemplate = document.createElement('script'),
       scriptsInProgress = {}, modulesInProgress = {};
 
@@ -85,32 +84,38 @@
     } else if (!this.force && indexOf(Script.loaded, this.path) > -1) {
       this.loaded();
     } else {
-      scriptsInProgress[this.path] = me;
-
-      var fileLoaded = function() { me.loaded() };
-
-      var script = scriptTemplate.cloneNode(false);
-      script.type = 'text/javascript';
-      script.async = true;
-
-      script.onload = fileLoaded;
-
-      script.onerror = function() {
-        throw new Error(me.path + ' not loaded');
-      }
-
-      script.onreadystatechange = function () {
-        if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
-          this.onreadystatechange = null;
-          fileLoaded();
-        }
-      };
-
-      script.src = this.path;
-      scripts[0].parentNode.insertBefore(script, scripts[0]);
+      this.load();
     }
 
     return this;
+  }
+  Script.prototype.load = function() {
+    var me = this;
+    
+    scriptsInProgress[this.path] = me;
+
+    var fileLoaded = function() { me.loaded() };
+
+    var script = scriptTemplate.cloneNode(false);
+    
+    script.type = 'text/javascript';
+    script.async = true;
+
+    script.onload = fileLoaded;
+
+    script.onerror = function() {
+      throw new Error(me.path + ' not loaded');
+    }
+
+    script.onreadystatechange = function () {
+      if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
+        this.onreadystatechange = null;
+        fileLoaded();
+      }
+    };
+
+    script.src = this.path;
+    scripts[0].parentNode.insertBefore(script, scripts[0]);
   }
   Script.prototype.loaded = function() {
     this.mark();
@@ -402,4 +407,4 @@
       using.apply(context, main.split(/\s*,\s*/)).then(function() {});
     }
   }
-}(this));
+}(this, document));
