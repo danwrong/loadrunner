@@ -216,22 +216,22 @@
            });
          });
 
-         QUnit.module('built files');
-
-         QUnit.test('should correctly execute code from built file', function() {
-           loadrunner.Script.loaded = [];
-           loadrunner.Module.exports = {};
-
-           expect(1);
-           stop(1000);
-
-           using('javascripts/compiled.js', function() {
-             using('modcompiled', function(modd) {
-               equals(modd.test(), 'success from mod a via modcompiled', 'modd exports loaded');
-               start();
-             });
-           });
-         });
+         // QUnit.module('built files');
+         //
+         //        QUnit.test('should correctly execute code from built file', function() {
+         //          loadrunner.Script.loaded = [];
+         //          loadrunner.Module.exports = {};
+         //
+         //          expect(1);
+         //          stop(1000);
+         //
+         //          using('javascripts/compiled.js', function() {
+         //            using('modcompiled', function(modd) {
+         //              equals(modd.test(), 'success from mod a via modcompiled', 'modd exports loaded');
+         //              start();
+         //            });
+         //          });
+         //        });
 
           QUnit.module('AMD support');
 
@@ -296,6 +296,16 @@
 
     <script type="text/javascript" charset="utf-8">
       (function(){
+          function indexOf(arr, thing) {
+            for (var i=0, item; item = arr[i]; i++) {
+              if (thing == item) {
+                return i;
+              }
+            }
+
+            return -1;
+          }
+
           var a = document.createElement('script');
           a.type = 'text/javascript';
           a.async = true;

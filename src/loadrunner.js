@@ -91,31 +91,31 @@
   }
   Script.prototype.load = function() {
     var me = this;
-    
+
     scriptsInProgress[this.path] = me;
 
-    var fileLoaded = function() { me.loaded() };
-
     var script = scriptTemplate.cloneNode(false);
-    
+
     script.type = 'text/javascript';
     script.async = true;
-
-    script.onload = fileLoaded;
 
     script.onerror = function() {
       throw new Error(me.path + ' not loaded');
     }
 
-    script.onreadystatechange = function () {
-      if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
+    script.onreadystatechange = script.onload = function (e) {
+      e = context.event || e;
+
+      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
         this.onreadystatechange = null;
-        fileLoaded();
+        me.loaded()
       }
     };
 
     script.src = this.path;
     scripts[0].parentNode.insertBefore(script, scripts[0]);
+
+    this.script = script;
   }
   Script.prototype.loaded = function() {
     this.mark();
@@ -142,7 +142,7 @@
     return path(using.path, id + '.js');
   }
   Module.prototype.start = function() {
-    var exports, module, me = this;
+    var exports, module, me = this, oldCurrent;
     if (this.body) {
       this.execute();
     } else if (exports = Module.exports[this.id]) {
@@ -152,22 +152,27 @@
         me.exp(exports);
       });
     } else {
+      Module.current = null;
       modulesInProgress[this.id] = this;
-      Script.prototype.start.call(this);
+      Script.prototype.load.call(this);
+
+      if (Module.current) {
+        this.script.onload = this.script.onreadystatechange = null;
+        this.loaded();
+      }
     }
   }
   Module.prototype.loaded = function() {
-    var me = this;
+    var me = this, module;
 
     this.mark();
 
-    if (Module.current) {
-      Module.current.id = this.id;
-      Module.current.then(function(exports) {
+    if (module = Module.current) {
+      module.id = this.id;
+      module.then(function(exports) {
         delete modulesInProgress[me.id];
         me.exp(exports);
       });
-      Module.current = null;
     } else {
       throw new Error('Module ' + this.id + ' was not defined in ' + this.path);
     }
