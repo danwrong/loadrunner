@@ -1,7 +1,7 @@
 (function(context, document) {
   var scripts = document.getElementsByTagName('script'),
       scriptTag, scriptTemplate = document.createElement('script'),
-      scriptsInProgress = {}, modulesInProgress = {};
+      scriptsInProgress = {}, modulesInProgress = {}, interactiveModules = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
     if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
@@ -106,7 +106,7 @@
     script.onreadystatechange = script.onload = function (e) {
       e = context.event || e;
 
-      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
+      if (e.type == 'load' || indexOf(['loaded', 'complete', 'interactive'], this.readyState) > -1) {
         this.onreadystatechange = null;
         me.loaded()
       }
@@ -152,14 +152,8 @@
         me.exp(exports);
       });
     } else {
-      Module.current = null;
       modulesInProgress[this.id] = this;
       Script.prototype.load.call(this);
-
-      if (Module.current) {
-        this.script.onload = this.script.onreadystatechange = null;
-        this.loaded();
-      }
     }
   }
   Module.prototype.loaded = function() {
@@ -167,15 +161,24 @@
 
     this.mark();
 
-    if (module = Module.current) {
-      module.id = this.id;
-      module.then(function(exports) {
-        delete modulesInProgress[me.id];
-        me.exp(exports);
-      });
+    if (module = this.interactiveModule() || Module.current) {
+
+      if (!module.id) {
+        module.id = this.id;
+      }
+
+      if (module.id == this.id) {
+        module.then(function(exports) {
+          delete modulesInProgress[me.id];
+          me.exp(exports);
+        });
+      }
     } else {
       throw new Error('Module ' + this.id + ' was not defined in ' + this.path);
     }
+  }
+  Module.prototype.interactiveModule = function() {
+    return interactiveModules[this.script.src];
   }
   Module.prototype.execute = function() {
     var me = this;
@@ -242,6 +245,25 @@
     return this;
   }
 
+  function interactiveScript() {
+    for (var i in scripts) {
+      if (scripts[i].readyState == 'interactive') {
+        return scripts[i].src;
+      }
+    }
+  }
+
+  function newModule(name, body) {
+    var module = new Module(name, body), iScript;
+
+    if (iScript = interactiveScript()) {
+      // if IE store mod against interactive script
+      interactiveModules[iScript] = module;
+    } else {
+      Module.current = module;
+    }
+  }
+
   function provide() {
     var args = makeArray(arguments), name, body;
 
@@ -250,7 +272,8 @@
     }
 
     body = args.shift();
-    return Module.current = new Module(name, body);
+
+    return newModule(name, body);
   }
 
   function amdResolve(id, mod) {
@@ -297,7 +320,7 @@
 
     factory = args.shift();
 
-    return Module.current = new Module(id, function(exports) {
+    return newModule(id, function(exports) {
       var me = this, mods = [];
 
       function executeAMD() {
