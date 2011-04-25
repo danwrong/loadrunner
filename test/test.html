@@ -291,6 +291,22 @@
               start();
             });
           });
+
+          QUnit.module('LoadBuilder test');
+          QUnit.test('should be able to provide module and use it, inline', function() {
+            expect(1);
+            stop(2000);
+
+            provide('a/b', function(exports) {
+              exports(true);
+            });
+
+            using('a/b', function(ab) {
+              ok(ab);
+              start();
+            });
+          });
+
      }
     </script>
 
