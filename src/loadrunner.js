@@ -77,11 +77,11 @@
   Script.prototype.start = function() {
     var me = this, dep;
 
-    if (dep = scriptsInProgress[this.path]) {
+    if (dep = scriptsInProgress[this.id]) {
       dep.then(function() {
         me.loaded();
       });
-    } else if (!this.force && indexOf(Script.loaded, this.path) > -1) {
+    } else if (!this.force && indexOf(Script.loaded, this.id) > -1) {
       this.loaded();
     } else {
       this.load();
