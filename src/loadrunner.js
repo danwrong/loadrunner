@@ -1,6 +1,6 @@
 (function(context, document) {
-  var scripts = document ? document.getElementsByTagName('script'):[],
-      scriptTag, scriptTemplate = document && document.createElement('script'),
+  var scripts = document.getElementsByTagName('script'),
+      scriptTag, scriptTemplate = document.createElement('script'),
       scriptsInProgress = {}, modulesInProgress = {}, interactiveModules = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
@@ -135,6 +135,7 @@
     if (typeof body == 'undefined') {
       this.path = this.resolvePath(id);
     }
+
   }
   Module.exports = {};
   Module.prototype = new Script;
@@ -153,7 +154,7 @@
       });
     } else {
       modulesInProgress[this.id] = this;
-      Script.prototype.load.call(this);
+      this.load();
     }
   }
   Module.prototype.loaded = function() {
@@ -262,6 +263,14 @@
     } else {
       Module.current = module;
     }
+
+    if (name) {
+      // if its a named provide then ensure
+      // then its marked in progress
+      modulesInProgress[module.id] = module;
+    }
+
+    return module;
   }
 
   function provide() {
