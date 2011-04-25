@@ -1,6 +1,6 @@
 (function(context, document) {
-  var scripts = document.getElementsByTagName('script'),
-      scriptTag, scriptTemplate = document.createElement('script'),
+  var scripts = document ? document.getElementsByTagName('script'):[],
+      scriptTag, scriptTemplate = document && document.createElement('script'),
       scriptsInProgress = {}, modulesInProgress = {}, interactiveModules = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
