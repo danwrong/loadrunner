@@ -195,7 +195,7 @@
              using('javascripts/b.js', function() {
                using('moda', function() {
                  deepEqual(
-                   loadrunner.Script.loaded, ['javascripts/a.js', 'javascripts/b.js', 'modules/moda.js'],
+                   loadrunner.Script.loaded, ['javascripts/a.js', 'javascripts/b.js', 'moda'],
                    'require.loaded has files in correct order');
                  start();
                });

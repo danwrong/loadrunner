@@ -69,7 +69,7 @@
   };
 
   function Script(path, force) {
-    this.path = path;
+    this.id = this.path = path;
     this.force = !!force;
   }
   Script.loaded = [];
@@ -92,7 +92,7 @@
   Script.prototype.load = function() {
     var me = this;
 
-    scriptsInProgress[this.path] = me;
+    scriptsInProgress[this.id] = me;
 
     var script = scriptTemplate.cloneNode(false);
 
@@ -122,9 +122,9 @@
     this.complete();
   }
   Script.prototype.mark = function() {
-    delete scriptsInProgress[this.path];
-    if (indexOf(Script.loaded, this.path) == -1) {
-      Script.loaded.push(this.path);
+    delete scriptsInProgress[this.id];
+    if (indexOf(Script.loaded, this.id) == -1) {
+      Script.loaded.push(this.id);
     }
   }
 
@@ -418,7 +418,9 @@
   }
 
   using.matchers.add(/\.js$/, function(path) {
-    return new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/'));
+    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/'), false);
+    script.id = path;
+    return script;
   });
 
   using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
