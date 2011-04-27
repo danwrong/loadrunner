@@ -185,6 +185,7 @@
          QUnit.module('loadrunner.Script.loaded');
 
          QUnit.test('should list files loaded in order', function() {
+           bLoadCount = 0;
            loadrunner.Script.loaded = [];
            loadrunner.Module.exports = {};
 

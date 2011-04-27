@@ -1,7 +1,9 @@
 (function(context, document) {
-  var scripts = document.getElementsByTagName('script'),
+  var useInteractive = context.attachEvent && !context.opera,
+      scripts = document.getElementsByTagName('script'), uuid = 0,
       scriptTag, scriptTemplate = document.createElement('script'),
-      scriptsInProgress = {}, modulesInProgress = {}, interactiveModules = {};
+      scriptsInProgress = {}, modulesInProgress = {}, loadedModule,
+      currentScript, activeScripts = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
     if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
@@ -96,6 +98,7 @@
 
     var script = scriptTemplate.cloneNode(false);
 
+    this.scriptId = script.id = 'LR' + ++uuid;
     script.type = 'text/javascript';
     script.async = true;
 
@@ -106,26 +109,30 @@
     script.onreadystatechange = script.onload = function (e) {
       e = context.event || e;
 
-      if (e.type == 'load' || indexOf(['loaded', 'complete', 'interactive'], this.readyState) > -1) {
+      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
         this.onreadystatechange = null;
-        me.loaded()
+        me.loaded();
       }
     };
 
     script.src = this.path;
-    scripts[0].parentNode.insertBefore(script, scripts[0]);
 
-    this.script = script;
+    currentScript = this;
+    scripts[0].parentNode.insertBefore(script, scripts[0]);
+    currentScript = null;
+
+    activeScripts[script.id] = this;
   }
   Script.prototype.loaded = function() {
-    this.mark();
     this.complete();
   }
-  Script.prototype.mark = function() {
-    delete scriptsInProgress[this.id];
+  Script.prototype.complete = function() {
     if (indexOf(Script.loaded, this.id) == -1) {
       Script.loaded.push(this.id);
     }
+
+    delete scriptsInProgress[this.id];
+    Dependency.prototype.complete.apply(this, arguments);
   }
 
   function Module(id, body) {
@@ -158,28 +165,21 @@
     }
   }
   Module.prototype.loaded = function() {
-    var me = this, module;
+    var module, me = this;
 
-    this.mark();
+    if (!useInteractive) {
+      module = loadedModule;
+      loadedModule = null;
+      module.id = module.id || this.id;
 
-    if (module = this.interactiveModule() || Module.current) {
-
-      if (!module.id) {
-        module.id = this.id;
-      }
-
-      if (module.id == this.id) {
-        module.then(function(exports) {
-          delete modulesInProgress[me.id];
-          me.exp(exports);
-        });
-      }
-    } else {
-      throw new Error('Module ' + this.id + ' was not defined in ' + this.path);
+      module.then(function(exports) {
+        me.exp(exports);
+      });
     }
   }
-  Module.prototype.interactiveModule = function() {
-    return interactiveModules[this.script.src];
+  Module.prototype.complete = function() {
+    delete modulesInProgress[this.id];
+    Script.prototype.complete.apply(this, arguments);
   }
   Module.prototype.execute = function() {
     var me = this;
@@ -249,24 +249,24 @@
   function interactiveScript() {
     for (var i in scripts) {
       if (scripts[i].readyState == 'interactive') {
-        return scripts[i].src;
+        return activeScripts[scripts[i].id];
       }
     }
   }
 
-  function newModule(name, body) {
-    var module = new Module(name, body), iScript;
+  function defineModule(name, body) {
+    var module;
 
-    if (iScript = interactiveScript()) {
-      // if IE store mod against interactive script
-      interactiveModules[iScript] = module;
-    } else {
-      Module.current = module;
+    if (useInteractive) {
+      module = currentScript || interactiveScript();
     }
 
-    if (name) {
-      // if its a named provide then ensure
-      // then its marked in progress
+    if (module) {
+      delete activeScripts[module.scriptId];
+      module.body = body;
+      module.execute();
+    } else {
+      loadedModule = module = new Module(name, body);
       modulesInProgress[module.id] = module;
     }
 
@@ -282,7 +282,7 @@
 
     body = args.shift();
 
-    return newModule(name, body);
+    return defineModule(name, body);
   }
 
   function amdResolve(id, mod) {
@@ -329,7 +329,7 @@
 
     factory = args.shift();
 
-    return newModule(id, function(exports) {
+    return defineModule(id, function(exports) {
       var me = this, mods = [];
 
       function executeAMD() {
