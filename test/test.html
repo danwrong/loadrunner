@@ -308,6 +308,16 @@
             });
           });
 
+          QUnit.test('should be able load several named modules in a single file', function() {
+            expect(1);
+            stop(2000);
+
+            using('modcompiled', function(ab) {
+              equals(ab, 'thinganother');
+              start();
+            });
+          });
+
      }
     </script>
 

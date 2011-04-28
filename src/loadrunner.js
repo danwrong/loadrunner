@@ -175,6 +175,12 @@
       module.then(function(exports) {
         me.exp(exports);
       });
+    } else {
+      if (module = modulesInProgress[this.id]) {
+        module.then(function(exports) {
+          me.exp(exports);
+        });
+      }
     }
   }
   Module.prototype.complete = function() {
@@ -257,7 +263,7 @@
   function defineModule(name, body) {
     var module;
 
-    if (useInteractive) {
+    if (!name && useInteractive) {
       module = currentScript || interactiveScript();
     }
 
