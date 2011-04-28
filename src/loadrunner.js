@@ -165,7 +165,7 @@
     }
   }
   Module.prototype.loaded = function() {
-    var module, me = this;
+    var module, exports, me = this;
 
     if (!useInteractive) {
       module = loadedModule;
@@ -176,7 +176,9 @@
         me.exp(exports);
       });
     } else {
-      if (module = modulesInProgress[this.id]) {
+      if (exports = Module.exports[this.id]) {
+        this.exp(exports);
+      } else if (module = modulesInProgress[this.id]) {
         module.then(function(exports) {
           me.exp(exports);
         });
