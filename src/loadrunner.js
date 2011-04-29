@@ -3,7 +3,9 @@
       scripts = document.getElementsByTagName('script'), uuid = 0,
       scriptTag, scriptTemplate = document.createElement('script'),
       scriptsInProgress = {}, modulesInProgress = {}, loadedModule,
-      currentScript, activeScripts = {};
+      currentScript, activeScripts = {}, oldUsing = context.using,
+      oldProvide = context.provide, oldDefine = context.define,
+      oldLoadrunner = context.loadrunner;
 
   for (var i=0, s; s = scripts[i]; i++) {
     if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
@@ -418,6 +420,29 @@
     }
   }
 
+  context.loadrunner = function loadrunner(f) {
+    return f(using, provide, loadrunner, define);
+  }
+
+  function noConflict() {
+    context.using = oldUsing;
+    context.provide = oldProvide;
+    context.define = oldDefine;
+    context.loadrunner = oldLoadrunner;
+    return loadrunner;
+  }
+
+  loadrunner.Script = Script;
+  loadrunner.Module = Module;
+  loadrunner.Collection = Collection;
+  loadrunner.Sequence = Sequence;
+  loadrunner.Dependency = Dependency;
+  loadrunner.noConflict = noConflict;
+
+  context.using   = using;
+  context.provide = provide;
+  context.define  = amdDefine;
+
   using.path = '';
 
   using.matchers = [];
@@ -434,18 +459,6 @@
   using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
     return new Module(id);
   });
-
-  context.loadrunner = {
-    Script: Script,
-    Module: Module,
-    Collection: Collection,
-    Sequence: Sequence,
-    Dependency: Dependency
-  };
-
-  context.using   = using;
-  context.provide = provide;
-  context.define  = amdDefine;
 
   if (scriptTag) {
     using.path = scriptTag.getAttribute('data-path') || scriptTag.src.split(/loadrunner\.js/)[0] || '';
