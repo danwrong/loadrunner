@@ -447,10 +447,10 @@
 
   using.matchers = [];
   using.matchers.add = function(regex, factory) {
-    this.push([regex, factory]);
+    this.unshift([regex, factory]);
   }
 
-  using.matchers.add(/\.js$/, function(path) {
+  using.matchers.add(/(^script!|\.js$)/, function(path) {
     var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/'), false);
     script.id = path;
     return script;
