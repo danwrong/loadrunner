@@ -16,14 +16,26 @@
 
 */
 (function() {
-  function JSONy(path, body) {
+  function JSONy(path) {
     this.id = this.path = path;
-    this.body = body;
   }
-  JSONy.loaded = [];
-  JSONy.loading = [];
+  JSONy.inProgress = [];
+  JSONy.done = [];
   JSONy.prototype = new loadrunner.Dependency;
   JSONy.prototype.start = function() {
+    var me = this, dep;
+    if (dep = JSONy.done[this.id]) {
+      this.complete(dep.result);
+    } else if (dep = JSONy.inProgress[this.id]) {
+      dep.then(function() {
+        me.complete(dep.result);
+      });
+    } else {
+      JSONy.inProgress[this.id] = this;
+      this.load();
+    }
+  };
+  JSONy.prototype.load = function() {
     var xhr, me = this;
     if(window.XMLHttpRequest) {
       xhr = new window.XMLHttpRequest();
@@ -37,7 +49,10 @@
     }
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4) {
-        me.complete(JSON.parse(xhr.responseText));
+        me.result = JSON.parse(xhr.responseText);
+        JSONy.done[me.id] = me;
+        delete JSONy.inProgress[me.id];
+        me.complete(me.result);
       }
     };
     xhr.open('GET', this.path, true);
