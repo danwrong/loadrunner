@@ -50,7 +50,7 @@
     }
 
     if (this.completed) {
-      cb.apply(this, this.results);
+      cb.apply(window, this.results);
     } else {
       this.callbacks = this.callbacks || [];
       this.callbacks.push(cb);
@@ -66,7 +66,7 @@
 
       if (this.callbacks) {
         for (var i=0, cb; cb = this.callbacks[i]; i++) {
-          cb.apply(this, this.results);
+          cb.apply(window, this.results);
         }
       }
     }
