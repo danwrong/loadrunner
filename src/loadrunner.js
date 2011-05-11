@@ -451,7 +451,7 @@
   }
 
   using.matchers.add(/(^script!|\.js$)/, function(path) {
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/'), false);
+    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''), false);
     script.id = path;
     return script;
   });
