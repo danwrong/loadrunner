@@ -35,33 +35,29 @@
   // pointy because such events used to match '>foo'
   function pointy(id) {
     var dep;
-    if (dep = pointy.inProgress[id]) {
+    if (dep = Pointy.inProgress[id]) {
       dep.complete();
-      delete pointy.inProgress[id];
+      delete Pointy.inProgress[id];
     }
-    pointy.done.push(id);
+    Pointy.done.push(id);
   }
-  pointy.inProgress = [];
-  pointy.done = [];
 
-  var Pointy = function(param, body) {
+  var Pointy = function(param) {
     this.param = param;
-    this.body = body;
   }
+  Pointy.inProgress = [];
+  Pointy.done = [];
   Pointy.prototype = new loadrunner.Dependency;
   Pointy.prototype.start = function() {
     var dep, me = this;
-    if (this.body) {
-      this.execute();
-    }
-    if (indexOf(pointy.done, this.param) != -1) {
+    if (indexOf(Pointy.done, this.param) != -1) {
       this.complete();
-    } else if (dep = pointy.inProgress[this.param]) {
+    } else if (dep = Pointy.inProgress[this.param]) {
       dep.then(function() {
         me.complete();
       });
     } else {
-      pointy.inProgress[this.param] = this;
+      Pointy.inProgress[this.param] = this;
     }
   }
   using.matchers.add(/^event\!/, function(id) {
