@@ -54,7 +54,6 @@ __provide([id], factory) => Module__
 
 provide defines a module with the given id.  If you don't provide an id then the module's id will be infered from the location of the javascript file that contains it (dom/events.js => dom/events).  Provide returns a type of depdendency, Module.  The second argument can be either a function that is run to define the module or any kind of other type.  In the case of this being a function when the module is a evaluated the function is called with a single argument, normally called exports, which is a function that you call to specify which public values the module exports.  Note that you can call this at any point after the module has been evaluated.  Exporting module values is asynchronous.  Among other things, this allows seemless operation with the using function to allow your modules to depend on other items.
 
-
     // define a module, config, that exports some static values
     provide('config', {
       env: 'staging',
@@ -82,3 +81,12 @@ provide defines a module with the given id.  If you don't provide an id then the
     using('app/main', function(main) {
       alert(main); //=> 57
     });
+
+AMD Modules
+-----------
+
+Loadrunner has fledgling support for AMD Modules.  However, this support might not be compelete at this time.  Please report any problems you find.
+
+
+More documentation forthcoming...
+
