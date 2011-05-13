@@ -15,7 +15,7 @@
   TODO: THERE IS CURRENTLY NO HANDLING FOR LOAD ERRORS.
 
 */
-(function() {
+loadrunner(function(using, provide, loadrunner, define) {
   function JSONy(path) {
     this.id = this.path = path;
   }
@@ -49,7 +49,7 @@
     }
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4) {
-        me.result = JSON.parse(xhr.responseText);
+        me.result = xhr.responseText;
         JSONy.done[me.id] = me;
         delete JSONy.inProgress[me.id];
         me.complete(me.result);
@@ -60,6 +60,6 @@
   };
 
   using.matchers.add(/^json!/, function(path) {
-    return new JSONy(path.split(/json!/)[1]);
+    return new JSONy(path.substring(5));
   });
-}());
+});
