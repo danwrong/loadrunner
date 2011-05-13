@@ -18,11 +18,11 @@ Just run:
 The Basics
 ----------
 
-In its basic for loadrunner exposes two top level functions 'using' and 'provide'.
+In its basic form, loadrunner exposes two top level functions: `using` and `provide`.
 
 __using(dependency[, dependency1, dependency2, ...][callback]) => Combination__
 
-Takes any number of dependencies, which can be any type of dependency object or a string representing a dependency (a path to a javascript file or module identify works by default), and returns a dependency called a Combination which waits for all of the given dependencies to complete in any order.  If you specify a callback then its attached to this dependency as a convenience.  Depending on the type of dependencies specified in the using block some arguments may be passed to the callback function.  For instance, in the case of using a module the modules exports are passed as a function argument.
+Takes any number of dependencies, which can be any type of dependency object or a string representing a dependency (a path to a javascript file or module identify works by default), and returns a dependency called a *Combination* which waits for all of the given dependencies to complete in any order.  If you specify a callback then it's attached to this dependency as a convenience.  
 
     // use some javascript files
     using('javascripts/jquery.js', 'javascripts/underscore.js', function() {
@@ -32,6 +32,8 @@ Takes any number of dependencies, which can be any type of dependency object or 
         });
       })
     });
+
+Depending on the type of dependencies specified in the `using` block some arguments may be passed to the callback function.  For instance, in the case of using a module, the module's exports are passed as a function argument.
 
     // use some modules
     using('dom', 'events', function(dom, events) {
@@ -45,16 +47,16 @@ Takes any number of dependencies, which can be any type of dependency object or 
     // get reference to a dependency
     var mods = using('dom', 'events');
 
-    // use that depdendency with others
-    use(mods, 'javascripts/jquery.js', function() {
+    // use that dependency with others
+    using(mods, 'javascripts/jquery.js', function(dom, events) {
 
     });
 
-__provide([id], factory) => Module__
+__provide([id,] factory) => Module__
 
-provide defines a module with the given id.  If you don't provide an id then the module's id will be infered from the location of the javascript file that contains it (dom/events.js => dom/events).  Provide returns a type of depdendency, Module.  The second argument can be either a function that is run to define the module or any kind of other type.  In the case of this being a function when the module is a evaluated the function is called with a single argument, normally called exports, which is a function that you call to specify which public values the module exports.  Note that you can call this at any point after the module has been evaluated.  Exporting module values is asynchronous.  Among other things, this allows seemless operation with the using function to allow your modules to depend on other items.
+`provide` defines a module with the given id.  If you don't provide an id then the module's id will be inferred from the location of the javascript file that contains it (dom/events.js => dom/events).  Provide returns a type of dependency, *Module*.  The second argument can be either a function that is run to define the module or any kind of other type.  In the case of this being a function, then when the module is a evaluated the function is called with a single argument, normally called *exports*, which is a function that you call to specify which public values the module exports.  Note that you can call this at any point after the module has been evaluated.  Exporting module values is asynchronous.  Among other things, this allows seamless operation with the `using` function to allow your modules to depend on other items.
 
-    // define a module, config, that exports some static values
+    // define a module, "config", that exports some static values
     provide('config', {
       env: 'staging',
       admin: true
@@ -85,7 +87,7 @@ provide defines a module with the given id.  If you don't provide an id then the
 AMD Modules
 -----------
 
-Loadrunner has fledgling support for AMD Modules.  However, this support might not be compelete at this time.  Please report any problems you find.
+Loadrunner has fledgling support for [AMD Modules](http://wiki.commonjs.org/wiki/Modules/AsynchronousDefinition).  However, this support might not be complete at this time.  Please report any problems you find.
 
 
 More documentation forthcoming...
