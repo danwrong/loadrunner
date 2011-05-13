@@ -244,7 +244,7 @@
       if (dep) {
         dep.then(function(results) {
           if (dep.results.length > 0) {
-            allResults.concat(dep.results);
+            allResults.push(dep.results);
           }
           next();
         });
@@ -418,6 +418,7 @@
         return factory(id);
       }
     }
+    throw new Error(id + ' was not recognised by loader');
   }
 
   context.loadrunner = function loadrunner(f) {
