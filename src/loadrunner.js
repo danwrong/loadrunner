@@ -244,7 +244,7 @@
       if (dep) {
         dep.then(function(results) {
           if (dep.results.length > 0) {
-            allResults.concat(dep.results);
+            allResults.push(dep.results);
           }
           next();
         });
@@ -418,9 +418,10 @@
         return factory(id);
       }
     }
+    throw new Error(id + ' was not recognised by loader');
   }
 
-  context.loadrunner = function loadrunner(f) {
+  var loadrunner = function(f) {
     return f(using, provide, loadrunner, define);
   }
 
@@ -439,6 +440,7 @@
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
 
+  context.loadrunner = loadrunner;
   context.using   = using;
   context.provide = provide;
   context.define  = amdDefine;
