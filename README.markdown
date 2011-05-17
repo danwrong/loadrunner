@@ -85,7 +85,7 @@ provide defines a module with the given id.  If you don't provide an id then the
 AMD Modules
 -----------
 
-Loadrunner has fledgling support for AMD Modules.  However, this support might not be compelete at this time.  Please report any problems you find.
+Loadrunner has fledgling support for AMD Modules.  However, this support might not be complete at this time.  Please report any problems you find.
 
 
 More documentation forthcoming...
