@@ -207,6 +207,9 @@
 
   function Collection(deps) {
     this.deps = deps;
+    if (this.deps.length==0) {
+      this.complete();
+    }
   }
   Collection.prototype = new Dependency;
   Collection.prototype.start = function() {
