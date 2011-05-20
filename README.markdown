@@ -20,9 +20,11 @@ The Basics
 
 In its basic form, loadrunner exposes two top level functions: `using` and `provide`.
 
-__using(dependency[, dependency1, dependency2, ...][callback]) => Combination__
+__using(dependency[, dependency1, dependency2, ...][, callback][, collectResults]) => Combination__
 
 Takes any number of dependencies, which can be any type of dependency object or a string representing a dependency (a path to a javascript file or module identify works by default), and returns a dependency called a *Combination* which waits for all of the given dependencies to complete in any order.  If you specify a callback then it's attached to this dependency as a convenience.
+
+Dependencies are not loaded until a callback is attached.
 
     // use some javascript files
     using('javascripts/jquery.js', 'javascripts/underscore.js', function() {
@@ -51,6 +53,24 @@ Depending on the type of dependencies specified in the `using` block some argume
     using(mods, 'javascripts/jquery.js', function(dom, events) {
 
     });
+
+Using can provide all exports in a single object if required.  Just pass 'true' as the last parameter.
+
+    // use some modules in one object
+    using('dom', 'events', function(imports) {
+      var el = imports.dom.get('#thing');
+      imports.events.on(el, function() {
+        alert('kersplang');
+      });
+    }, true);
+
+Using can load script synchronously (in order) by being provided arguments in an array.
+
+    // load 'dom' first, then load 'events', then execute the callback
+    using(['dom', 'events'], function(imports) {
+
+    }, true);
+
 
 __provide([id,] factory) => Module__
 
