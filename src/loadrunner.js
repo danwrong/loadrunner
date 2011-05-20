@@ -14,8 +14,16 @@
     }
   }
 
+  function aug(target) {
+    for (var i = 1, o; o = arguments[i]; i++) {
+      for (var key in o) {
+        target[key] = o[key];
+      }
+    }
+    return target;
+  }
   function makeArray(o) {
-    return Array.prototype.slice.call(o);
+    return aug([],o);
   }
 
   var isArray = Array.isArray || function(obj) {
@@ -40,6 +48,15 @@
       }
     }
     return normalized.join('/');
+  }
+  function pushObjPath(obj, path, newobj) {
+    // add newobj to obj under path
+    // pushObjPath(thing, 'a/b/c', new) //=> thing.a.b.c = new
+    var names = path.split('/'), cursor = obj;
+    while (names.length > 1) {
+      cursor = cursor[names.shift()] = {};
+    }
+    cursor[names[0]] = newobj;
   }
 
   function Dependency() {}
@@ -205,8 +222,9 @@
     this.complete(this.exports = Module.exports[this.id] = exports);
   }
 
-  function Collection(deps) {
+  function Collection(deps, collectResults) {
     this.deps = deps;
+    this.collectResults = collectResults;
     if (this.deps.length==0) {
       this.complete();
     }
@@ -218,10 +236,22 @@
     function depComplete() {
       var results = [];
 
+      if (me.collectResults) {
+        results[0] = {};
+      }
+
       for (var i=0, d; d = me.deps[i]; i++) {
         if (!d.completed) return;
         if (d.results.length > 0) {
-          results = results.concat(d.results);
+          if (me.collectResults) {
+            if (d instanceof Sequence) {
+              aug(results[0], d.results[0]);
+            } else {
+              pushObjPath(results[0], d.id, d.results[0]);
+            }
+          } else {
+            results = results.concat(d.results);
+          }
         }
       }
 
@@ -235,24 +265,37 @@
     return this;
   };
 
-  function Sequence(deps) {
+  function Sequence(deps, collectResults) {
     this.deps = deps;
+    this.collectResults = collectResults;
   }
   Sequence.prototype = new Dependency;
   Sequence.prototype.start = function() {
     var me = this, nextDep = 0, allResults = [];
+    if (me.collectResults) {
+      allResults[0] = {};
+    }
 
     (function next() {
       var dep = me.deps[nextDep++];
       if (dep) {
         dep.then(function(results) {
+          // this looks too similar to the Collection code above - TODO: refactor
           if (dep.results.length > 0) {
-            allResults.push(dep.results);
+            if (me.collectResults) {
+              if (dep instanceof Sequence) {
+                aug(allResults[0], dep.results[0]);
+              } else {
+                pushObjPath(allResults[0], dep.id, dep.results[0]);
+              }
+            } else {
+              allResults.push(dep.results[0]);
+            }
           }
           next();
         });
       } else {
-        me.complete(allResults);
+        me.complete.apply(me, allResults);
       }
     }());
 
@@ -379,13 +422,17 @@
   amdDefine.amd = {};
 
   function using() {
-    var deps = makeArray(arguments), callback;
+    var deps = makeArray(arguments), callback, collectResults;
+
+    if (typeof deps[deps.length-1] == 'boolean') {
+      collectResults = deps.pop();
+    }
 
     if (typeof deps[deps.length-1] == 'function') {
       callback = deps.pop();
     }
 
-    var combi = new Collection(mapDependencies(deps));
+    var combi = new Collection(mapDependencies(deps, collectResults), collectResults);
 
     if (callback) {
       combi.then(callback);
@@ -394,7 +441,7 @@
     return combi;
   }
 
-  function mapDependencies(deps) {
+  function mapDependencies(deps, collectResults) {
     var mapped = [];
 
     for (var i=0, dep; dep = deps[i]; i++) {
@@ -403,7 +450,7 @@
       }
 
       if (isArray(dep)) {
-        dep = new Sequence(mapDependencies(dep));
+        dep = new Sequence(mapDependencies(dep, collectResults), collectResults);
       }
 
       mapped.push(dep);
