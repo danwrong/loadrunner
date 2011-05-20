@@ -367,6 +367,18 @@
             });
           });
 
+          QUnit.test('should be able load modules from a bundle', function() {
+            expect(2);
+            stop(2000);
+            using.bundles.push({ 'modules/modcompiled.js':['thing', 'another'] });
+
+            using('thing', 'another', function(a, b) {
+              equals(a, 'thing');
+              equals(b, 'another');
+              start();
+            });
+          });
+
 
 
      }

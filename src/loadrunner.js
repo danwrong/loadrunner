@@ -61,9 +61,16 @@
 
   function Dependency() {}
   Dependency.prototype.then = function(cb) {
+    var dep = this, bundle;
     if (!this.started) {
       this.started = true;
-      this.start();
+      if (this.id && (bundle = whichBundle(this.id))) {
+        using(bundle, function() {
+          dep.start();
+        });
+      } else {
+        this.start();
+      }
     }
 
     if (this.completed) {
@@ -511,6 +518,18 @@
   using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
     return new Module(id);
   });
+
+  using.bundles = [];
+  // Append your bundle manifests to this array
+  // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
+  // Loadbuilder can generate your bundles and manifests
+  function whichBundle(id) {
+    for (var manifestId=0; manifestId < using.bundles.length; manifestId++) {
+      for (var bundleId in using.bundles[manifestId]) {
+        if (indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
+      }
+    }
+  }
 
   if (scriptTag) {
     using.path = scriptTag.getAttribute('data-path') || scriptTag.src.split(/loadrunner\.js/)[0] || '';
