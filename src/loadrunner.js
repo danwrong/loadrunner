@@ -23,7 +23,7 @@
     return target;
   }
   function makeArray(o) {
-    return aug([],o);
+    return Array.prototype.slice.call(o);
   }
 
   var isArray = Array.isArray || function(obj) {
