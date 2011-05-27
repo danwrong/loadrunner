@@ -186,11 +186,11 @@
            expect(2);
            stop(1000);
 
-           using('moda', 'modb', function(results) {
+           using('moda', 'modb', true, function(results) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              start();
-           }, true);
+           });
          });
 
          QUnit.module('loadrunner.Script.loaded');
@@ -244,26 +244,26 @@
            expect(4);
            stop(1000);
 
-           using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda', function(results, dead) {
+           using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda', true, function(results, dead) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
              equals(undefined, dead, 'no extra args');
              start();
-           }, true);
+           });
          });
 
          QUnit.test('should return collected modules if nested array argument', function() {
            expect(4);
            stop(1000);
 
-           using(['moda', ['moda', 'modb', 'sub/modsubfolder']], function(results, dead) {
+           using(['moda', ['moda', 'modb', 'sub/modsubfolder']], true, function(results, dead) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
              equals(undefined, dead, 'no extra args');
              start();
-           }, true);
+           });
          });
 
          // QUnit.module('built files');

@@ -431,12 +431,12 @@
   function using() {
     var deps = makeArray(arguments), callback, collectResults;
 
-    if (typeof deps[deps.length-1] == 'boolean') {
-      collectResults = deps.pop();
-    }
-
     if (typeof deps[deps.length-1] == 'function') {
       callback = deps.pop();
+    }
+
+    if (typeof deps[deps.length-1] == 'boolean') {
+      collectResults = deps.pop();
     }
 
     var combi = new Collection(mapDependencies(deps, collectResults), collectResults);
