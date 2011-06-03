@@ -61,16 +61,10 @@
 
   function Dependency() {}
   Dependency.prototype.then = function(cb) {
-    var dep = this, bundle;
+    var dep = this;
     if (!this.started) {
       this.started = true;
-      if (this.id && (bundle = whichBundle(this.id))) {
-        using(bundle, function() {
-          dep.start();
-        });
-      } else {
-        this.start();
-      }
+      this.start();
     }
 
     if (this.completed) {
@@ -103,7 +97,16 @@
   Script.loaded = [];
   Script.prototype = new Dependency;
   Script.prototype.start = function() {
-    var me = this, dep;
+    var me = this, dep, bundle, module;
+
+    // provide ability to provide a script inline, like you would a module
+    // so here, we say "if script is already provided, use that"
+    if (module = modulesInProgress[this.id]) {
+      module.then(function() {
+        me.complete();
+      });
+      return this;
+    }
 
     if (dep = scriptsInProgress[this.id]) {
       dep.then(function() {
@@ -111,6 +114,10 @@
       });
     } else if (!this.force && indexOf(Script.loaded, this.id) > -1) {
       this.loaded();
+    } else if (bundle = whichBundle(this.id)) {
+      using(bundle, function() {
+        this.loaded();
+      });
     } else {
       this.load();
     }
@@ -185,6 +192,10 @@
       module.then(function(exports) {
         me.exp(exports);
       });
+    } else if (bundle = whichBundle(this.id)) {
+      using(bundle, function() {
+        me.start();
+      });
     } else {
       modulesInProgress[this.id] = this;
       this.load();
@@ -220,13 +231,13 @@
     if (typeof this.body == 'object') {
       this.exp(this.body);
     } else if (typeof this.body == 'function') {
-      this.body(function(exports) {
+      this.body.apply(window, [function(exports) {
         me.exp(exports);
-      });
+      }]);
     }
   }
   Module.prototype.exp = function(exports) {
-    this.complete(this.exports = Module.exports[this.id] = exports);
+    this.complete(this.exports = Module.exports[this.id] = exports || {});
   }
 
   function Collection(deps, collectResults) {
@@ -526,7 +537,7 @@
   function whichBundle(id) {
     for (var manifestId=0; manifestId < using.bundles.length; manifestId++) {
       for (var bundleId in using.bundles[manifestId]) {
-        if (indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
+        if (bundleId!=id && indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
       }
     }
   }
