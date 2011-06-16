@@ -193,6 +193,17 @@
            });
          });
 
+         QUnit.test('should collect module results without overwriting namespaces', function() {
+           expect(2);
+           stop(1000);
+
+           using('sub/submoda', 'sub/submodb', true, function(results) {
+             equals('success', results.sub.submodb.test(), 'sub.submodb exports loaded');
+             equals('success', results.sub.submoda.test, 'sub.submoda exports loaded');
+             start();
+           });
+         });
+
          QUnit.module('loadrunner.Script.loaded');
 
          QUnit.test('should list files loaded in order', function() {

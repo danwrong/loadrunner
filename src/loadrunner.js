@@ -54,7 +54,8 @@
     // pushObjPath(thing, 'a/b/c', new) //=> thing.a.b.c = new
     var names = path.split('/'), cursor = obj;
     while (names.length > 1) {
-      cursor = cursor[names.shift()] = {};
+      var name = names.shift();
+      cursor = cursor[name] = cursor[name] || {};
     }
     cursor[names[0]] = newobj;
   }
