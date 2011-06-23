@@ -117,7 +117,7 @@
       this.loaded();
     } else if (bundle = whichBundle(this.id)) {
       using(bundle, function() {
-        this.loaded();
+        me.loaded();
       });
     } else {
       this.load();
