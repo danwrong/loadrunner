@@ -339,6 +339,7 @@
     if (module) {
       delete activeScripts[module.scriptId];
       module.body = body;
+      // If 'execute' method is not found here, you're wrongly loading this as a script instead of a module
       module.execute();
     } else {
       loadedModule = module = new Module(name, body);
