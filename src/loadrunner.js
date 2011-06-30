@@ -5,10 +5,11 @@
       scriptsInProgress = {}, modulesInProgress = {}, loadedModule,
       currentScript, activeScripts = {}, oldUsing = context.using,
       oldProvide = context.provide, oldDefine = context.define,
-      oldLoadrunner = context.loadrunner;
+      oldLoadrunner = context.loadrunner,
+      loadRunnerFileRegex = /loadrunner([v0-9\.-]+)?\.js(\?|#|$)/;
 
   for (var i=0, s; s = scripts[i]; i++) {
-    if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
+    if (s.src.match(loadRunnerFileRegex)) {
       scriptTag = s;
       break;
     }
@@ -515,6 +516,7 @@
   context.define  = amdDefine;
 
   using.path = '';
+  using.loadRunnerFileRegex = loadRunnerFileRegex;
 
   using.matchers = [];
   using.matchers.add = function(regex, factory) {
@@ -544,7 +546,7 @@
   }
 
   if (scriptTag) {
-    using.path = scriptTag.getAttribute('data-path') || scriptTag.src.split(/loadrunner\.js/)[0] || '';
+    using.path = scriptTag.getAttribute('data-path') || scriptTag.src.split(loadRunnerFileRegex)[0] || '';
 
     if (main = scriptTag.getAttribute('data-main')) {
       using.apply(context, main.split(/\s*,\s*/)).then(function() {});

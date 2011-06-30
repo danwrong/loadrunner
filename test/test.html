@@ -26,6 +26,13 @@
            ok(mainLoaded, 'main should be loaded');
          });
 
+         QUnit.test('should be able to version the loadrunner.js file', function() {
+           ok('loadrunner.js'.match(using.loadRunnerFileRegex), 'unversioned allowed');
+           ok('loadrunner-20110630.js'.match(using.loadRunnerFileRegex), 'dated version allowed');
+           ok('loadrunner-1.0.0.js'.match(using.loadRunnerFileRegex), 'numeric version allowed');
+           ok('loadrunner-v1.0.0.js'.match(using.loadRunnerFileRegex), 'numeric version with v allowed');
+         });
+
          QUnit.module('module');
 
          QUnit.test('should be able to define a module with an object literal', function() {
@@ -389,7 +396,6 @@
               start();
             });
           });
-
 
 
      }
