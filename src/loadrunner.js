@@ -94,8 +94,10 @@
   function Script(path, force) {
     this.id = this.path = path;
     this.force = !!force;
+    if (path) this.bundle = whichBundle(this.id);
   }
   Script.loaded = [];
+  Script.times = {};
   Script.prototype = new Dependency;
   Script.prototype.start = function() {
     var me = this, dep, bundle, module;
@@ -115,8 +117,8 @@
       });
     } else if (!this.force && indexOf(Script.loaded, this.id) > -1) {
       this.loaded();
-    } else if (bundle = whichBundle(this.id)) {
-      using(bundle, function() {
+    } else if (this.bundle) {
+      using(this.bundle, function() {
         me.loaded();
       });
     } else {
@@ -127,7 +129,7 @@
   }
   Script.prototype.load = function() {
     var me = this;
-
+    this.times = { start: new Date() };
     scriptsInProgress[this.id] = me;
 
     var script = scriptTemplate.cloneNode(false);
@@ -164,7 +166,9 @@
     if (indexOf(Script.loaded, this.id) == -1) {
       Script.loaded.push(this.id);
     }
-
+    if (this.times) {
+      Script.times[this.id] = aug(this.times, { end: new Date() });
+    }
     delete scriptsInProgress[this.id];
     Dependency.prototype.complete.apply(this, arguments);
   }
@@ -177,6 +181,7 @@
       this.path = this.resolvePath(id);
     }
 
+    if (id) this.bundle = whichBundle(this.id);
   }
   Module.exports = {};
   Module.prototype = new Script;
@@ -193,8 +198,8 @@
       module.then(function(exports) {
         me.exp(exports);
       });
-    } else if (bundle = whichBundle(this.id)) {
-      using(bundle, function() {
+    } else if (this.bundle) {
+      using(this.bundle, function() {
         me.start();
       });
     } else {
@@ -238,6 +243,9 @@
     }
   }
   Module.prototype.exp = function(exports) {
+    if (this.times) {
+      aug(this.times, { eval: new Date() });
+    }
     this.complete(this.exports = Module.exports[this.id] = exports || {});
   }
 
