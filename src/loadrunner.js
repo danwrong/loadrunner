@@ -370,6 +370,7 @@
   }
 
   function amdResolve(id, mod) {
+    // replace the './' on the id with the dir taken from the mod id.
     var from = mod.id || '';
     var parts = from.split('/'); parts.pop();
     var dir = parts.join('/');
@@ -413,20 +414,20 @@
 
     factory = args.shift();
 
-    return defineModule(id, function(exports) {
-      var me = this, mods = [];
+    var mod = defineModule(id, function(exports) {
+      var mods = [];
 
       function executeAMD() {
-        var args = amdMap(makeArray(dependencies), me), exported;
+        var args = amdMap(makeArray(dependencies), mod), exported;
 
         if (typeof factory == 'function') {
-          exported = factory.apply(me, args);
+          exported = factory.apply(mod, args);
         } else {
           exported = factory;
         }
 
         if (typeof exported == 'undefined') {
-          exported = me.exports;
+          exported = mod.exports;
         }
 
         exports(exported);
@@ -435,7 +436,7 @@
       for (var i=0, len=dependencies.length; i < len; i++) {
         var d = dependencies[i];
         if (indexOf(['require', 'exports'], d) == -1) {
-          mods.push(amdResolve(d, me));
+          mods.push(amdResolve(d, mod));
         }
       }
 
@@ -445,6 +446,7 @@
         executeAMD();
       }
     });
+    return mod;
   }
 
   amdDefine.amd = {};
@@ -500,7 +502,7 @@
   }
 
   var loadrunner = function(f) {
-    return f(using, provide, loadrunner, define);
+    return f(using, provide, loadrunner, amdDefine);
   }
 
   function noConflict() {
