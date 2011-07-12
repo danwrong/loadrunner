@@ -49,8 +49,8 @@
     }
     return normalized.join('/');
   }
+
   function pushObjPath(obj, path, newobj) {
-    // add newobj to obj under path
     // pushObjPath(thing, 'a/b/c', new) //=> thing.a.b.c = new
     var names = path.split('/'), cursor = obj;
     while (names.length > 1) {
@@ -60,10 +60,21 @@
     cursor[names[0]] = newobj;
   }
 
+ /*
+ if (me.collectResults) {
+   if (dep instanceof Sequence) {
+     aug(allResults[0], dep.results[0]);
+   } else {
+     pushObjPath(allResults[0], dep.id, dep.results[0]);
+   }
+ } else {
+ */
+
   function Dependency() {}
   Dependency.prototype.then = function(cb) {
     var dep = this;
-    if (!this.started) {
+
+    if (!this.started && using.autoFetch) {
       this.started = true;
       this.start();
     }
@@ -94,13 +105,12 @@
   function Script(path, force) {
     this.id = this.path = path;
     this.force = !!force;
-    if (path) this.bundle = whichBundle(this.id);
   }
   Script.loaded = [];
   Script.times = {};
   Script.prototype = new Dependency;
   Script.prototype.start = function() {
-    var me = this, dep, bundle, module;
+    var me = this, dep, module;
 
     // provide ability to provide a script inline, like you would a module
     // so here, we say "if script is already provided, use that"
@@ -117,10 +127,6 @@
       });
     } else if (!this.force && indexOf(Script.loaded, this.id) > -1) {
       this.loaded();
-    } else if (this.bundle) {
-      using(this.bundle, function() {
-        me.loaded();
-      });
     } else {
       this.load();
     }
@@ -181,7 +187,6 @@
       this.path = this.resolvePath(id);
     }
 
-    if (id) this.bundle = whichBundle(this.id);
   }
   Module.exports = {};
   Module.prototype = new Script;
@@ -197,10 +202,6 @@
     } else if (module = modulesInProgress[this.id]) {
       module.then(function(exports) {
         me.exp(exports);
-      });
-    } else if (this.bundle) {
-      using(this.bundle, function() {
-        me.start();
       });
     } else {
       modulesInProgress[this.id] = this;
@@ -249,10 +250,23 @@
     this.complete(this.exports = Module.exports[this.id] = exports || {});
   }
 
-  function Collection(deps, collectResults) {
+  function flattenDeps(deps) {
+    var flat = [];
+
+    for (var i=0, d; d = deps[i]; i++) {
+      if (d instanceof Sequence) {
+        flat = flat.concat(flattenDeps(d.deps));
+      } else if (d instanceof Module) {
+        flat.push(d);
+      }
+    }
+
+    return flat;
+  }
+
+  function Collection(deps) {
     this.deps = deps;
-    this.collectResults = collectResults;
-    if (this.deps.length==0) {
+    if (this.deps.length == 0) {
       this.complete();
     }
   }
@@ -263,22 +277,10 @@
     function depComplete() {
       var results = [];
 
-      if (me.collectResults) {
-        results[0] = {};
-      }
-
       for (var i=0, d; d = me.deps[i]; i++) {
         if (!d.completed) return;
         if (d.results.length > 0) {
-          if (me.collectResults) {
-            if (d instanceof Sequence) {
-              aug(results[0], d.results[0]);
-            } else {
-              pushObjPath(results[0], d.id, d.results[0]);
-            }
-          } else {
-            results = results.concat(d.results);
-          }
+          results = results.concat(d.results);
         }
       }
 
@@ -291,33 +293,33 @@
 
     return this;
   };
+  Collection.prototype.as = function(cb) {
+    var me = this;
 
-  function Sequence(deps, collectResults) {
+    return this.then(function() {
+      var flatDeps = flattenDeps(me.deps), obj = {};
+
+      for (var i=0, d; d = flatDeps[i]; i++) {
+        pushObjPath(obj, d.id, arguments[i]);
+      }
+
+      cb.apply(this, [obj].concat(makeArray(arguments)));
+    });
+  };
+
+  function Sequence(deps) {
     this.deps = deps;
-    this.collectResults = collectResults;
   }
   Sequence.prototype = new Dependency;
   Sequence.prototype.start = function() {
     var me = this, nextDep = 0, allResults = [];
-    if (me.collectResults) {
-      allResults[0] = {};
-    }
 
     (function next() {
       var dep = me.deps[nextDep++];
       if (dep) {
         dep.then(function(results) {
-          // this looks too similar to the Collection code above - TODO: refactor
           if (dep.results.length > 0) {
-            if (me.collectResults) {
-              if (dep instanceof Sequence) {
-                aug(allResults[0], dep.results[0]);
-              } else {
-                pushObjPath(allResults[0], dep.id, dep.results[0]);
-              }
-            } else {
-              allResults.push(dep.results[0]);
-            }
+            allResults = allResults.concat(dep.results);
           }
           next();
         });
@@ -452,17 +454,13 @@
   amdDefine.amd = {};
 
   function using() {
-    var deps = makeArray(arguments), callback, collectResults;
+    var deps = makeArray(arguments), callback;
 
     if (typeof deps[deps.length-1] == 'function') {
       callback = deps.pop();
     }
 
-    if (typeof deps[deps.length-1] == 'boolean') {
-      collectResults = deps.pop();
-    }
-
-    var combi = new Collection(mapDependencies(deps, collectResults), collectResults);
+    var combi = new Collection(mapDependencies(deps));
 
     if (callback) {
       combi.then(callback);
@@ -471,7 +469,7 @@
     return combi;
   }
 
-  function mapDependencies(deps, collectResults) {
+  function mapDependencies(deps) {
     var mapped = [];
 
     for (var i=0, dep; dep = deps[i]; i++) {
@@ -480,7 +478,7 @@
       }
 
       if (isArray(dep)) {
-        dep = new Sequence(mapDependencies(dep, collectResults), collectResults);
+        dep = new Sequence(mapDependencies(dep));
       }
 
       mapped.push(dep);
@@ -526,6 +524,7 @@
   context.define  = amdDefine;
 
   using.path = '';
+  using.autoFetch = true;
 
   using.matchers = [];
   using.matchers.add = function(regex, factory) {
@@ -541,18 +540,6 @@
   using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
     return new Module(id);
   });
-
-  using.bundles = [];
-  // Append your bundle manifests to this array
-  // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
-  // Loadbuilder can generate your bundles and manifests
-  function whichBundle(id) {
-    for (var manifestId=0; manifestId < using.bundles.length; manifestId++) {
-      for (var bundleId in using.bundles[manifestId]) {
-        if (bundleId!=id && indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
-      }
-    }
-  }
 
   if (scriptTag) {
     using.path = scriptTag.getAttribute('data-path') || scriptTag.src.split(/loadrunner\.js/)[0] || '';

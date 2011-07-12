@@ -186,7 +186,7 @@
            expect(2);
            stop(1000);
 
-           using('moda', 'modb', true, function(results) {
+           using('moda', 'modb').as(function(results) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              start();
@@ -197,7 +197,7 @@
            expect(2);
            stop(1000);
 
-           using('sub/submoda', 'sub/submodb', true, function(results) {
+           using('sub/submoda', 'sub/submodb').as(function(results) {
              equals('success', results.sub.submodb.test(), 'sub.submodb exports loaded');
              equals('success', results.sub.submoda.test, 'sub.submoda exports loaded');
              start();
@@ -230,6 +230,7 @@
 
          QUnit.test('should use dependencies in sequence if array argument', function() {
            window.testSeq = [];
+
            expect(1);
            stop(1000);
 
@@ -240,39 +241,49 @@
          });
 
          QUnit.test('should return modules in sequence if array argument', function() {
+            expect(3);
+            stop(1000);
+
+            using('modb', ['moda', 'modb'], 'moda', function(modb2, moda, modb, moda2) {
+              equals('success', moda.test, 'moda exports loaded from sequence');
+              equals('success', modb.test(), 'modb exports loaded from sequence');
+              equals('success', moda2.test, 'moda exports loaded outside sequence');
+              start();
+            });
+          });
+
+          QUnit.test('should return modules in sequence if nested array argument', function() {
+             expect(3);
+             stop(1000);
+
+             using(['modb', ['moda', 'modb'], 'moda'], function(modb2, moda, modb, moda2) {
+               equals('success', moda.test, 'moda exports loaded from sequence');
+               equals('success', modb.test(), 'modb exports loaded from sequence');
+               equals('success', moda2.test, 'moda exports loaded outside sequence');
+               start();
+             });
+           });
+
+         QUnit.test('should return collected modules if array argument', function() {
            expect(3);
            stop(1000);
 
-           using('modb', ['moda', 'modb'], 'moda', function(modb2, moda, modb, moda2) {
-             equals('success', moda.test, 'moda exports loaded from sequence');
-             equals('success', modb.test(), 'modb exports loaded from sequence');
-             equals('success', moda2.test, 'moda exports loaded outside sequence');
-             start();
-           });
-         });
-
-         QUnit.test('should return collected modules if array argument', function() {
-           expect(4);
-           stop(1000);
-
-           using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda', true, function(results, dead) {
+           using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda').as(function(results, dead) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
-             equals(undefined, dead, 'no extra args');
              start();
            });
          });
 
          QUnit.test('should return collected modules if nested array argument', function() {
-           expect(4);
+           expect(3);
            stop(1000);
 
-           using(['moda', ['moda', 'modb', 'sub/modsubfolder']], true, function(results, dead) {
+           using(['moda', ['moda', 'modb', 'sub/modsubfolder']]).as(function(results) {
              equals('success', results.moda.test, 'moda exports loaded');
              equals('success', results.modb.test(), 'modb exports loaded');
              equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
-             equals(undefined, dead, 'no extra args');
              start();
            });
          });
@@ -378,19 +389,39 @@
             });
           });
 
-          QUnit.test('should be able load modules from a bundle', function() {
+          QUnit.test('should put individual args after obj when using .as()', function() {
             expect(2);
             stop(2000);
-            using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
 
-            using('thing', 'another', function(a, b) {
-              equals(a, 'thing');
-              equals(b, 'another');
+
+            using('moda', 'modb').as(function(all, moda, modb) {
+              ok(all.moda == moda);
+              ok(all.modb == modb);
               start();
             });
           });
 
+          QUnit.test('should be able to defer start of dep using autoStart = false', function() {
+            expect(1);
+            stop(2000);
+            using.autoStart = false;
+            var startCalled = false;
 
+            using('defered', function() {
+              if (startCalled) {
+                ok(true, 'only loaded after start');
+              } else {
+                ok(false, 'loaded without start being called');
+              }
+
+              start();
+            });
+
+            setTimeout(function() {
+              startCalled = true;
+              using('defered').start();
+            }, 500);
+          });
 
      }
     </script>
