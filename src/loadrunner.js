@@ -74,7 +74,7 @@
   Dependency.prototype.then = function(cb) {
     var dep = this;
 
-    if (!this.started && using.autoFetch) {
+    if (!this.started && using.autoStart) {
       this.started = true;
       this.start();
     }
@@ -524,7 +524,7 @@
   context.define  = amdDefine;
 
   using.path = '';
-  using.autoFetch = true;
+  using.autoStart = true;
 
   using.matchers = [];
   using.matchers.add = function(regex, factory) {
