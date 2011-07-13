@@ -103,7 +103,7 @@
   };
 
   function Script(path, force) {
-    this.id = this.path = this.resolvePath(path);
+    if (path) this.id = this.path = this.resolvePath(path);
     this.force = !!force;
   }
   Script.loaded = [];
@@ -541,6 +541,7 @@
         if (bundleId!=id && indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
       }
     }
+    return id;
   }
 
   using.matchers = [];
