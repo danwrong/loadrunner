@@ -188,6 +188,7 @@
     } else {
       this.queueScript();
     }
+    return this;
   }
   Script.prototype.loaded = function() {
     this.complete();
@@ -364,16 +365,16 @@
     return this;
   }
   Sequence.prototype.load = function() {
-    // var me = this, nextDep = 0;
-    //
-    // (function next() {
-    //   var dep = me.deps[nextDep++];
-    //   if (dep) {
-    //     dep.load(true).then(function() {
-    //       next();
-    //     });
-    //   }
-    // }());
+    var me = this, nextDep = 0;
+
+    (function next() {
+      var dep = me.deps[nextDep++];
+      if (dep && dep.load) {
+        dep.load(true).then(function() {
+          next();
+        });
+      }
+    }());
 
     return this;
   }

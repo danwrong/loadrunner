@@ -415,7 +415,7 @@
 
 
 
-          QUnit.test('should be able to defer start of dep using autoStart = false', function() {
+          QUnit.test('should be able to defer start of dep using autoLoad = false', function() {
             // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
             //
             expect(1);
@@ -435,7 +435,7 @@
 
             setTimeout(function() {
               startCalled = true;
-              using('defered').load();
+              using(['defered']).load();
             }, 100);
           });
 
