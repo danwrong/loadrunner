@@ -423,9 +423,9 @@
             using.autoLoad = false;
             var startCalled = false;
 
-            using('defered', function() {
+            using('defered', function(a) {
               if (startCalled) {
-                ok(true, 'only loaded after start');
+                ok(a === 'loaded now', 'only loaded after start');
               } else {
                 ok(false, 'loaded without start being called');
               }
