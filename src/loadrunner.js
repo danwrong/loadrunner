@@ -103,12 +103,15 @@
   };
 
   function Script(path, force) {
-    this.id = this.path = path;
+    this.id = this.path = this.resolvePath(path);
     this.force = !!force;
   }
   Script.loaded = [];
   Script.times = {};
   Script.prototype = new Dependency;
+  Script.prototype.resolvePath = function(path) {
+    return whichBundle(path);
+  }
   Script.prototype.start = function() {
     var me = this, dep, module;
 
@@ -187,11 +190,12 @@
       this.path = this.resolvePath(id);
     }
 
+
   }
   Module.exports = {};
   Module.prototype = new Script;
   Module.prototype.resolvePath = function(id) {
-    return path(using.path, id + '.js');
+    return path(using.path, whichBundle(id) + '.js');
   }
   Module.prototype.start = function() {
     var exports, module, me = this, oldCurrent;
@@ -525,6 +529,19 @@
 
   using.path = '';
   using.autoStart = true;
+
+  using.bundles = [];
+
+  // Append your bundle manifests to this array
+  // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
+  // Loadbuilder can generate your bundles and manifests
+  function whichBundle(id) {
+    for (var manifestId=0; manifestId < using.bundles.length; manifestId++) {
+      for (var bundleId in using.bundles[manifestId]) {
+        if (bundleId!=id && indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
+      }
+    }
+  }
 
   using.matchers = [];
   using.matchers.add = function(regex, factory) {
