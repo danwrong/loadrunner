@@ -142,9 +142,9 @@
       scriptsInProgress[this.id] = me;
 
       if (paused = pausedScripts[this.path]) {
-        me.then(function(results) {
+        me.then(function() {
           for (var i=0, d; d = paused[i]; i++) {
-            d.complete(results);
+            d.complete.apply(d, arguments);
           }
         });
       }
