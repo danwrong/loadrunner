@@ -5,7 +5,7 @@
       scriptsInProgress = {}, modulesInProgress = {}, loadedModule,
       currentScript, activeScripts = {}, oldUsing = context.using,
       oldProvide = context.provide, oldDefine = context.define,
-      oldLoadrunner = context.loadrunner;
+      oldLoadrunner = context.loadrunner, pausedScripts = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
     if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
@@ -74,7 +74,7 @@
   Dependency.prototype.then = function(cb) {
     var dep = this;
 
-    if (!this.started && using.autoStart) {
+    if (!this.started) {
       this.started = true;
       this.start();
     }
@@ -136,37 +136,58 @@
 
     return this;
   }
-  Script.prototype.load = function() {
-    var me = this;
-    this.times = { start: new Date() };
-    scriptsInProgress[this.id] = me;
+  Script.prototype.createScriptTag = function() {
+      var me = this, paused;
 
-    var script = scriptTemplate.cloneNode(false);
+      scriptsInProgress[this.id] = me;
 
-    this.scriptId = script.id = 'LR' + ++uuid;
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.onerror = function() {
-      throw new Error(me.path + ' not loaded');
-    }
-
-    script.onreadystatechange = script.onload = function (e) {
-      e = context.event || e;
-
-      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
-        this.onreadystatechange = null;
-        me.loaded();
+      if (paused = pausedScripts[this.path]) {
+        me.then(function(results) {
+          for (var i=0, d; d = paused[i]; i++) {
+            d.complete(results);
+          }
+        });
       }
+
+      this.times = { start: new Date() };
+
+      var script = scriptTemplate.cloneNode(false);
+
+      this.scriptId = script.id = 'LR' + ++uuid;
+      script.type = 'text/javascript';
+      script.async = true;
+
+      script.onerror = function() {
+        throw new Error(me.path + ' not loaded');
+      }
+
+      script.onreadystatechange = script.onload = function (e) {
+        e = context.event || e;
+
+        if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
+          this.onreadystatechange = null;
+          me.loaded();
+        }
+      };
+      Script.prototype.queueScript = function() {
+        pausedScripts[this.path] = pausedScripts[this.path] || [];
+        pausedScripts[this.path].push(this);
+      };
+
+      script.src = this.path;
+
+      currentScript = this;
+      scripts[0].parentNode.insertBefore(script, scripts[0]);
+      currentScript = null;
+
+      activeScripts[script.id] = this;
     };
-
-    script.src = this.path;
-
-    currentScript = this;
-    scripts[0].parentNode.insertBefore(script, scripts[0]);
-    currentScript = null;
-
-    activeScripts[script.id] = this;
+  Script.prototype.load = function(force) {
+    if (using.autoLoad || force) {
+      this.createScriptTag();
+    } else {
+      this.queueScript();
+    }
   }
   Script.prototype.loaded = function() {
     this.complete();
@@ -195,7 +216,7 @@
   Module.exports = {};
   Module.prototype = new Script;
   Module.prototype.resolvePath = function(id) {
-    return path(using.path, whichBundle(id) + '.js');
+    return (whichBundle(id) != id) ? whichBundle(id) : path(using.path, id + '.js');
   }
   Module.prototype.start = function() {
     var exports, module, me = this, oldCurrent;
@@ -297,6 +318,14 @@
 
     return this;
   };
+  Collection.prototype.load = function() {
+    for (var i=0, d; d = this.deps[i]; i++) {
+      if (d.load) {
+        d.load(true);
+      }
+    }
+    return this;
+  }
   Collection.prototype.as = function(cb) {
     var me = this;
 
@@ -331,6 +360,20 @@
         me.complete.apply(me, allResults);
       }
     }());
+
+    return this;
+  }
+  Sequence.prototype.load = function() {
+    // var me = this, nextDep = 0;
+    //
+    // (function next() {
+    //   var dep = me.deps[nextDep++];
+    //   if (dep) {
+    //     dep.load(true).then(function() {
+    //       next();
+    //     });
+    //   }
+    // }());
 
     return this;
   }
@@ -528,7 +571,7 @@
   context.define  = amdDefine;
 
   using.path = '';
-  using.autoStart = true;
+  using.autoLoad = true;
 
   using.bundles = [];
 

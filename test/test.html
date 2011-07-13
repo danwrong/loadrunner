@@ -401,28 +401,42 @@
             });
           });
 
+          QUnit.test('should be able load modules from a bundle', function() {
+            expect(2);
+            stop(2000);
+            loadrunner.Script.loaded = [];
+            using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
+            using('thing', 'another', function(a, b) {
+              equals(a, 'thing');
+              equals(b, 'another');
+              start();
+            });
+          });
+
+
+
           QUnit.test('should be able to defer start of dep using autoStart = false', function() {
             // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
             //
-            // expect(1);
-            // stop(2000);
-            // using.autoStart = false;
-            // var startCalled = false;
-            //
-            // using('defered', function() {
-            //   if (startCalled) {
-            //     ok(true, 'only loaded after start');
-            //   } else {
-            //     ok(false, 'loaded without start being called');
-            //   }
-            //
-            //   start();
-            // });
-            //
-            // setTimeout(function() {
-            //   startCalled = true;
-            //   using('defered').start();
-            // }, 100);
+            expect(1);
+            stop(2000);
+            using.autoLoad = false;
+            var startCalled = false;
+
+            using('defered', function() {
+              if (startCalled) {
+                ok(true, 'only loaded after start');
+              } else {
+                ok(false, 'loaded without start being called');
+              }
+
+              start();
+            });
+
+            setTimeout(function() {
+              startCalled = true;
+              using('defered').load();
+            }, 100);
           });
 
      }
