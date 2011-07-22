@@ -64,33 +64,47 @@
   function Dependency() {}
 
   Dependency.prototype.then = function(cb) {
-    var dep = this, inProgress, met;
-
     this.callbacks = this.callbacks || [];
     this.callbacks.push(cb);
 
     if (this.completed) {
       cb.apply(context, this.results);
-    } else if (met = metDependencies[this.key()]) {
-      this.complete(met.results);
-    } else if (inProgress = inProgressDependencies[this.key()]) {
-        inProgess.then(function() {
-          dep.complete.apply(dep, arguments);
-        });
     } else {
-      if (!this.paused) this.start();
+      if (this.callbacks.length == 1) {
+        this.start();
+      }
     }
 
     return this;
   };
   Dependency.prototype.key = function() {
-    if (!this.id) this.id = uuid++;
+    if (!this.id) {
+      this.id = uuid++;
+    }
+
     return 'dependency_' + this.id;
   };
   Dependency.prototype.start = function() {
-    inProgressDependencies[this.key()] = this;
+    var dep = this, met, inProgress;
+
+    if (met = metDependencies[this.key()]) {
+      console.log('met', this.id);
+      this.complete(met.results);
+    } else if (inProgress = inProgressDependencies[this.key()]) {
+        console.log('inProgess', inProgress.id);
+        inProgress.then(function() {
+          dep.complete.apply(dep, arguments);
+        });
+    } else {
+      console.log('fetching', this.id);
+      inProgressDependencies[this.key()] = this;
+      this.fetch();
+    }
   };
   Dependency.prototype.complete = function() {
+    inProgressDependencies[this.key()] = null;
+    metDependencies[this.key()] = this;
+
     if (!this.completed) {
       this.results = makeArray(arguments);
       this.completed = true;
@@ -110,19 +124,12 @@
     this.force = !!force;
   }
   Script.prototype = new Dependency;
+  Script.prototype.resolvePath = function(path) {
+    return (whichBundle(path) != path) ? whichBundle(path) : path;
+  }
   Script.prototype.key = function() { return "script_" + this.id };
-  Script.prototype.start = function() {
-    Dependency.prototype.start.call(this);
-
-    var me = this, paused;
-
-    if (paused = pausedScripts[this.path]) {
-      me.then(function() {
-        for (var i=0, d; d = paused[i]; i++) {
-          d.complete.apply(d, arguments);
-        }
-      });
-    }
+  Script.prototype.fetch = function() {
+    var me = this;
 
     var script = scriptTemplate.cloneNode(false);
 
@@ -151,16 +158,19 @@
 
     activeScripts[script.id] = this;
   };
+  Script.prototype.loaded = function() {
+    this.complete();
+  }
 
   function Module(id, body) {
     this.id = id;
     this.body = body;
 
+    console.log('define', this.id)
+
     if (typeof body == 'undefined') {
       this.path = this.resolvePath(id);
     }
-
-
   }
   Module.exports = {};
   Module.prototype = new Script;
@@ -169,6 +179,13 @@
   }
   Module.prototype.resolvePath = function(id) {
     return (whichBundle(id) != id) ? whichBundle(id) : path(using.path, id + '.js');
+  }
+  Module.prototype.fetch = function() {
+    if (this.body) {
+      this.execute();
+    } else {
+      Script.prototype.fetch.apply(this);
+    }
   }
   Module.prototype.loaded = function() {
     var module, exports, me = this;
@@ -182,10 +199,9 @@
         me.exp(exports);
       });
     } else {
-      // heres something to sort out
       if (exports = Module.exports[this.id]) {
         this.exp(exports);
-      } else if (module = modulesInProgress[this.id]) {
+      } else if (module = inProgressDependencies[this.key()]) {
         module.then(function(exports) {
           me.exp(exports);
         });
@@ -230,7 +246,7 @@
     }
   }
   Collection.prototype = new Dependency;
-  Collection.prototype.start = function() {
+  Collection.prototype.fetch = function() {
     var me = this;
 
     function depComplete() {
@@ -278,7 +294,7 @@
     this.deps = deps;
   }
   Sequence.prototype = new Dependency;
-  Sequence.prototype.start = function() {
+  Sequence.prototype.fetch = function() {
     var me = this, nextDep = 0, allResults = [];
 
     (function next() {
@@ -334,7 +350,6 @@
       module.execute();
     } else {
       loadedModule = module = new Module(name, body);
-      modulesInProgress[module.id] = module;
     }
 
     return module;
