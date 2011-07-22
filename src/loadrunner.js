@@ -2,9 +2,8 @@
   var useInteractive = context.attachEvent && !context.opera,
       scripts = document.getElementsByTagName('script'), uuid = 0,
       scriptTag, scriptTemplate = document.createElement('script'),
-      loadedModule, currentScript, activeScripts = {}, oldUsing = context.using,
-      oldProvide = context.provide, oldDefine = context.define,
-      oldLoadrunner = context.loadrunner;
+      currentProvide, currentScript, activeScripts = {}, oldUsing = context.using,
+      oldProvide = context.provide, oldLoadrunner = context.loadrunner;
 
   var pausedDependencies = {}, metDependencies = {}, inProgressDependencies = {};
 
@@ -52,7 +51,6 @@
   }
 
   function pushObjPath(obj, path, newobj) {
-    // pushObjPath(thing, 'a/b/c', new) //=> thing.a.b.c = new
     var names = path.split('/'), cursor = obj;
     while (names.length > 1) {
       var name = names.shift();
@@ -88,21 +86,28 @@
     var dep = this, met, inProgress;
 
     if (met = metDependencies[this.key()]) {
-      console.log('met', this.id);
-      this.complete(met.results);
+      this.complete.apply(this, met.results);
     } else if (inProgress = inProgressDependencies[this.key()]) {
-        console.log('inProgess', inProgress.id);
         inProgress.then(function() {
           dep.complete.apply(dep, arguments);
         });
     } else {
-      console.log('fetching', this.id);
-      inProgressDependencies[this.key()] = this;
-      this.fetch();
+      if (this.shouldFetch()) {
+        inProgressDependencies[this.key()] = this;
+        this.fetch();
+      } else {
+        pausedDependencies[this.key()] = pausedDependencies[this.key()] || [];
+        pausedDependencies[this.key()].push(this);
+      }
     }
   };
+  Dependency.prototype.shouldFetch = function() {
+    return true;
+  }
   Dependency.prototype.complete = function() {
-    inProgressDependencies[this.key()] = null;
+    var paused;
+
+    delete inProgressDependencies[this.key()];
     metDependencies[this.key()] = this;
 
     if (!this.completed) {
@@ -115,19 +120,31 @@
         }
       }
 
-      // get paused deps for this id and complete them
+      if (paused = pausedDependencies[this.key()]) {
+        for (var i=0, p; p = paused[i]; i++) {
+          p.complete.apply(p, arguments);
+        }
+      }
     }
   };
 
   function Script(path, force) {
-    if (path) this.id = this.path = this.resolvePath(path);
+    if (path) {
+      this.id = this.path = this.resolvePath(path);
+    }
     this.force = !!force;
   }
+  Script.autoFetch = true;
   Script.prototype = new Dependency;
   Script.prototype.resolvePath = function(path) {
     return (whichBundle(path) != path) ? whichBundle(path) : path;
   }
-  Script.prototype.key = function() { return "script_" + this.id };
+  Script.prototype.key = function() {
+    return "script_" + this.id;
+  };
+  Script.prototype.shouldFetch = function() {
+    return Script.autoFetch || this.force;
+  };
   Script.prototype.fetch = function() {
     var me = this;
 
@@ -162,67 +179,84 @@
     this.complete();
   }
 
-  function Module(id, body) {
+  function Module(id, force) {
     this.id = id;
-    this.body = body;
-
-    console.log('define', this.id)
-
-    if (typeof body == 'undefined') {
-      this.path = this.resolvePath(id);
-    }
+    this.path = this.resolvePath(id);
+    this.force = force;
   }
   Module.exports = {};
   Module.prototype = new Script;
+  Module.prototype.fetch = function() {
+    var me = this, def;
+
+    if (def = Definition.provided[this.id]) {
+      def.then(function(exports) {
+        me.complete.call(me, exports);
+      });
+    } else {
+      Script.prototype.fetch.call(this);
+    }
+  };
   Module.prototype.key = function() {
     return 'module_' + this.id;
   }
   Module.prototype.resolvePath = function(id) {
     return (whichBundle(id) != id) ? whichBundle(id) : path(using.path, id + '.js');
   }
-  Module.prototype.fetch = function() {
-    if (this.body) {
-      this.execute();
-    } else {
-      Script.prototype.fetch.apply(this);
-    }
-  }
   Module.prototype.loaded = function() {
-    var module, exports, me = this;
+    var p, exports, me = this;
 
     if (!useInteractive) {
-      module = loadedModule;
-      loadedModule = null;
-      module.id = module.id || this.id;
+      p = currentProvide;
+      currentProvide = null;
 
-      module.then(function(exports) {
-        me.exp(exports);
+      p.then(function(exports) {
+        me.complete.call(me, exports);
+      });
+    }
+  }
+
+  function Definition(id, body) {
+    this.id = id;
+    this.body = body;
+
+    if (!name && useInteractive) {
+      module = currentScript || interactiveScript();
+
+      delete activeScripts[module.scriptId];
+
+      this.then(function(exports) {
+        module.complete.call(module, exports);
       });
     } else {
-      if (exports = Module.exports[this.id]) {
-        this.exp(exports);
-      } else if (module = inProgressDependencies[this.key()]) {
-        module.then(function(exports) {
-          me.exp(exports);
-        });
-      }
+      currentProvide = this;
+    }
+
+    if (this.id) {
+      Definition.provided[this.id] = this;
     }
   }
-  Module.prototype.execute = function() {
+  Definition.provided = {};
+  Definition.prototype = new Dependency;
+  Definition.prototype.fetch = function() {
     var me = this;
+
     if (typeof this.body == 'object') {
-      this.exp(this.body);
+      this.complete(this.body);
     } else if (typeof this.body == 'function') {
-      this.body.apply(window, [function(exports) {
-        me.exp(exports);
-      }]);
+      this.body.call(window, function(exports) {
+        me.complete(exports);
+      });
     }
   }
-  Module.prototype.exp = function(exports) {
-    if (this.times) {
-      aug(this.times, { eval: new Date() });
+  Definition.prototype.complete = function(exports) {
+    exports = exports || {};
+
+    if (this.id) {
+      this.exports = Module.exports[this.id] = exports;
     }
-    this.complete(this.exports = Module.exports[this.id] = exports || {});
+
+    Dependency.prototype.complete.call(this, exports);
   }
 
   function flattenDeps(deps) {
@@ -336,25 +370,6 @@
     }
   }
 
-  function defineModule(name, body) {
-    var module;
-
-    if (!name && useInteractive) {
-      module = currentScript || interactiveScript();
-    }
-
-    if (module) {
-      delete activeScripts[module.scriptId];
-      module.body = body;
-      // If 'execute' method is not found here, you're wrongly loading this as a script instead of a module
-      module.execute();
-    } else {
-      loadedModule = module = new Module(name, body);
-    }
-
-    return module;
-  }
-
   function provide() {
     var args = makeArray(arguments), name, body;
 
@@ -364,90 +379,8 @@
 
     body = args.shift();
 
-    return defineModule(name, body);
+    return new Definition(name, body);
   }
-
-  function amdResolve(id, mod) {
-    // replace the './' on the id with the dir taken from the mod id.
-    var from = mod.id || '';
-    var parts = from.split('/'); parts.pop();
-    var dir = parts.join('/');
-    return id.replace(/^\./, dir);
-  }
-
-  function amdMap(args, mod) {
-    var mapped = [];
-
-    function require(id) {
-      return Module.exports[amdResolve(id, mod)];
-    }
-
-    for (var i=0, len = args.length; i < len; i++) {
-      if (args[i] == 'require') {
-        mapped.push(require);
-        continue;
-      }
-
-      if (args[i] == 'exports') {
-        mod.exports = mod.exports || {};
-        mapped.push(mod.exports);
-        continue;
-      }
-
-      mapped.push(require(args[i]));
-    }
-    return mapped;
-  }
-
-  function amdDefine() {
-    var args = makeArray(arguments), dependencies = [], id, factory;
-
-    if (typeof args[0] == 'string') {
-      id = args.shift();
-    }
-
-    if (isArray(args[0])) {
-      dependencies = args.shift();
-    }
-
-    factory = args.shift();
-
-    var mod = defineModule(id, function(exports) {
-      var mods = [];
-
-      function executeAMD() {
-        var args = amdMap(makeArray(dependencies), mod), exported;
-
-        if (typeof factory == 'function') {
-          exported = factory.apply(mod, args);
-        } else {
-          exported = factory;
-        }
-
-        if (typeof exported == 'undefined') {
-          exported = mod.exports;
-        }
-
-        exports(exported);
-      }
-
-      for (var i=0, len=dependencies.length; i < len; i++) {
-        var d = dependencies[i];
-        if (indexOf(['require', 'exports'], d) == -1) {
-          mods.push(amdResolve(d, mod));
-        }
-      }
-
-      if (mods.length > 0) {
-        using.apply(this, mods.concat(executeAMD));
-      } else {
-        executeAMD();
-      }
-    });
-    return mod;
-  }
-
-  amdDefine.amd = {};
 
   function using() {
     var deps = makeArray(arguments), callback;
@@ -502,7 +435,6 @@
   function noConflict() {
     context.using = oldUsing;
     context.provide = oldProvide;
-    context.define = oldDefine;
     context.loadrunner = oldLoadrunner;
     return loadrunner;
   }
@@ -517,10 +449,8 @@
   context.loadrunner = loadrunner;
   context.using   = using;
   context.provide = provide;
-  context.define  = amdDefine;
 
   using.path = '';
-  using.autoLoad = true;
 
   using.bundles = [];
 
@@ -541,14 +471,18 @@
     this.unshift([regex, factory]);
   }
 
-  using.matchers.add(/(^script!|\.js$)/, function(path) {
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''), false);
-    script.id = path;
+  using.matchers.add(/(^script!|\.js(!?)$)/, function(path) {
+    var force = !!path.match(/!$/);
+    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,'').replace(/!$/, ''), force);
+    if (force) script.start();
     return script;
   });
 
-  using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
-    return new Module(id);
+  using.matchers.add(/^[a-zA-Z0-9_\-\/]+(!?)$/, function(id) {
+    var force = !!id.match(/!$/);
+    var mod = new Module(id.replace(/!$/, ''), force);
+    if (force) mod.start();
+    return mod;
   });
 
   if (scriptTag) {
