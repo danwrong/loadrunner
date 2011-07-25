@@ -217,23 +217,34 @@
   }
 
   function Definition(id, body) {
+    var module;
+
     this.id = id;
     this.body = body;
 
-    if (!name && useInteractive) {
-      module = currentScript || interactiveScript();
+    if (!id) {
+      if (useInteractive) {
+        module = currentScript || interactiveScript();
 
-      delete activeScripts[module.scriptId];
 
-      this.then(function(exports) {
-        module.complete.call(module, exports);
-      });
+        if (module) {
+          delete activeScripts[module.scriptId];
+
+          this.then(function(exports) {
+            module.complete.call(module, exports);
+          });
+        }
+      } else {
+        currentProvide = this;
+      }
     } else {
-      currentProvide = this;
-    }
+     Definition.provided[this.id] = this;
 
-    if (this.id) {
-      Definition.provided[this.id] = this;
+     if (module = inProgressDependencies['module_' + this.id]) {
+       this.then(function(exports) {
+         module.complete.call(module, exports);
+       });
+     }
     }
   }
   Definition.provided = {};
