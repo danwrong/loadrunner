@@ -449,7 +449,7 @@
   }
 
   var loadrunner = function(f) {
-    return f(using, provide, loadrunner, amdDefine);
+    return f(using, provide, loadrunner);
   }
 
   function noConflict() {
@@ -487,6 +487,7 @@
   loadrunner.Module = Module;
   loadrunner.Collection = Collection;
   loadrunner.Sequence = Sequence;
+  loadrunner.Definition = Definition;
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
   loadrunner.timings = timings;
