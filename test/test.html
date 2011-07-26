@@ -398,13 +398,13 @@
           stop(2000);
           loadrunner.Script.autoFetch = false;
 
-          provide('defered', function() {
+          provide('laterz', function(exports) {
             exports('loaded now');
           });
-          using('defered', function(a) {
+          using('laterz', function(a) {
             ok(a === 'loaded now', 'failed to use provided module');
 
-            loadrunner.Script.autoFetch = true;
+           loadrunner.Script.autoFetch = true;
             start();
           });
 

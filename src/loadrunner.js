@@ -193,7 +193,7 @@
   }
   Module.exports = {};
   Module.prototype = new Script;
-  Module.prototype.fetch = function() {
+  Module.prototype.start = function() {
     var me = this, def;
 
     if (def = Definition.provided[this.id]) {
@@ -201,7 +201,7 @@
         me.complete.call(me, exports);
       });
     } else {
-      Script.prototype.fetch.call(this);
+      Script.prototype.start.call(this);
     }
   };
   Module.prototype.key = function() {
@@ -247,13 +247,13 @@
         currentProvide = this;
       }
     } else {
-     Definition.provided[this.id] = this;
+      Definition.provided[this.id] = this;
 
-     if (module = inProgressDependencies['module_' + this.id]) {
+      if (module = inProgressDependencies['module_' + this.id]) {
        this.then(function(exports) {
          module.complete.call(module, exports);
        });
-     }
+      }
     }
   }
   Definition.provided = {};
@@ -465,7 +465,7 @@
         key: key,
         start: dep.startTime,
         end: dep.endTime,
-        duration: dep.endTime - dep.startTime,
+        duration: dep.endTime - (dep.startTime || (new Date).getTime()),
         status: status,
         origin: dep
       });
@@ -475,7 +475,7 @@
       return {
         start: dep.startTime,
         end: dep.endTime,
-        duration: dep.endTime - dep.startTime,
+        duration: dep.endTime - (dep.startTime || (new Date).getTime()),
         origin: dep
       };
     } else {
