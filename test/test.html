@@ -391,6 +391,25 @@
           }, 100);
         });
 
+        QUnit.test('should still run provided modules immediately, despite autoFetch = false', function() {
+          // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
+          //
+          expect(1);
+          stop(2000);
+          loadrunner.Script.autoFetch = false;
+
+          provide('defered', function() {
+            exports('loaded now');
+          });
+          using('defered', function(a) {
+            ok(a === 'loaded now', 'failed to use provided module');
+
+            loadrunner.Script.autoFetch = true;
+            start();
+          });
+
+        });
+
      }
     </script>
 
