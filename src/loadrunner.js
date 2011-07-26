@@ -297,6 +297,20 @@
     return flat;
   }
 
+  function forceStart() {
+    for (var i=0, d; d = this.deps[i]; i++) {
+      if (d.forceStart) {
+        d.forceStart();
+      } else {
+        d.force = true;
+      }
+    }
+
+    this.start();
+
+    return this;
+  }
+
   function Collection(deps) {
     this.deps = deps;
     if (this.deps.length == 0) {
@@ -326,14 +340,7 @@
 
     return this;
   };
-  Collection.prototype.load = function() {
-    for (var i=0, d; d = this.deps[i]; i++) {
-      if (d.load) {
-        d.load(true);
-      }
-    }
-    return this;
-  }
+  Collection.prototype.forceStart = forceStart;
   Collection.prototype.as = function(cb) {
     var me = this;
 
@@ -371,20 +378,7 @@
 
     return this;
   }
-  Sequence.prototype.load = function() {
-    var me = this, nextDep = 0;
-
-    (function next() {
-      var dep = me.deps[nextDep++];
-      if (dep && dep.load) {
-        dep.load(true).then(function() {
-          next();
-        });
-      }
-    }());
-
-    return this;
-  }
+  Sequence.prototype.forceStart = forceStart;
 
   function interactiveScript() {
     for (var i in scripts) {
@@ -463,29 +457,37 @@
     return loadrunner;
   }
 
-  function timings(key) {
-    var dep, timings = [];
+  function debug(key) {
+    var dep, log = [];
 
-    if (key && (dep = metDependencies[key])) {
+    function pushLog(dep, status) {
+      log.push({
+        key: key,
+        start: dep.startTime,
+        end: dep.endTime,
+        duration: dep.endTime - dep.startTime,
+        status: status,
+        origin: dep
+      });
+    }
 
+    if (key && ((dep = metDependencies[key]) || (dep = inProgressDependencies[key]))) {
       return {
         start: dep.startTime,
         end: dep.endTime,
-        duration: dep.endTime - dep.startTime
+        duration: dep.endTime - dep.startTime,
+        origin: dep
       };
     } else {
       for (var key in metDependencies) {
-        dep = metDependencies[key]
-
-        timings.push({
-          key: key,
-          start: dep.startTime,
-          end: dep.endTime,
-          duration: dep.endTime - dep.startTime
-        });
+        pushLog(metDependencies[key], 'met');
       }
 
-      return timings;
+      for (var key in inProgressDependencies) {
+        pushLog(inProgressDependencies[key], 'inProgress');
+      }
+
+      return log;
     }
   }
 
@@ -496,7 +498,7 @@
   loadrunner.Definition = Definition;
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
-  loadrunner.timings = timings;
+  loadrunner.debug = debug;
 
   context.loadrunner = loadrunner;
   context.using   = using;
@@ -523,17 +525,13 @@
     this.unshift([regex, factory]);
   }
 
-  using.matchers.add(/(^script!|\.js(!?)$)/, function(path) {
-    var force = !!path.match(/!$/);
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,'').replace(/!$/, ''), force);
-    if (force) script.start();
+  using.matchers.add(/(^script!|\.js$)/, function(path) {
+    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''));
     return script;
   });
 
-  using.matchers.add(/^[a-zA-Z0-9_\-\/]+(!?)$/, function(id) {
-    var force = !!id.match(/!$/);
-    var mod = new Module(id.replace(/!$/, ''), force);
-    if (force) mod.start();
+  using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
+    var mod = new Module(id.replace(/!$/, ''));
     return mod;
   });
 
