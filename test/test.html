@@ -162,16 +162,6 @@
          });
        });
 
-       QUnit.test('should require modules that have dependencies on regular scripts', function() {
-         expect(1);
-         stop(1000);
-
-         using('mode', function(mode) {
-           ok(mode.test(), 'mode ensured d.js was loaded');
-           start();
-         });
-       });
-
        QUnit.test('should require modules that are in subfolders', function() {
          expect(1);
          stop(1000);
