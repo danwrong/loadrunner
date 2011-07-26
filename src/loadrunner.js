@@ -258,6 +258,10 @@
   }
   Definition.provided = {};
   Definition.prototype = new Dependency;
+  Definition.prototype.key = function() {
+    if (!this.id) this.id = "anon_" + uuid++;
+    return 'definition_' + this.id;
+  };
   Definition.prototype.fetch = function() {
     var me = this;
 
@@ -466,7 +470,8 @@
 
       return {
         start: dep.startTime,
-        end: dep.endTime
+        end: dep.endTime,
+        duration: dep.endTime - dep.startTime
       };
     } else {
       for (var key in metDependencies) {
@@ -475,7 +480,8 @@
         timings.push({
           key: key,
           start: dep.startTime,
-          end: dep.endTime
+          end: dep.endTime,
+          duration: dep.endTime - dep.startTime
         });
       }
 
