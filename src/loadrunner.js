@@ -85,6 +85,8 @@
   Dependency.prototype.start = function() {
     var dep = this, met, inProgress;
 
+    this.startTime = (new Date).getTime();
+
     if (met = metDependencies[this.key()]) {
       this.complete.apply(this, met.results);
     } else if (inProgress = inProgressDependencies[this.key()]) {
@@ -107,8 +109,13 @@
   Dependency.prototype.complete = function() {
     var paused;
 
+    this.endTime = (new Date).getTime();
+
     delete inProgressDependencies[this.key()];
-    metDependencies[this.key()] = this;
+
+    if (!metDependencies[this.key()]) {
+      metDependencies[this.key()] = this;
+    }
 
     if (!this.completed) {
       this.results = makeArray(arguments);
@@ -210,9 +217,11 @@
       p = currentProvide;
       currentProvide = null;
 
-      p.then(function(exports) {
-        me.complete.call(me, exports);
-      });
+      if (p) {
+        p.then(function(exports) {
+          me.complete.call(me, exports);
+        });
+      }
     }
   }
 
@@ -450,12 +459,37 @@
     return loadrunner;
   }
 
+  function timings(key) {
+    var dep, timings = [];
+
+    if (key && (dep = metDependencies[key])) {
+
+      return {
+        start: dep.startTime,
+        end: dep.endTime
+      };
+    } else {
+      for (var key in metDependencies) {
+        dep = metDependencies[key]
+
+        timings.push({
+          key: key,
+          start: dep.startTime,
+          end: dep.endTime
+        });
+      }
+
+      return timings;
+    }
+  }
+
   loadrunner.Script = Script;
   loadrunner.Module = Module;
   loadrunner.Collection = Collection;
   loadrunner.Sequence = Sequence;
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
+  loadrunner.timings = timings;
 
   context.loadrunner = loadrunner;
   context.using   = using;
