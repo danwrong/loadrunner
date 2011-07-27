@@ -303,10 +303,9 @@
         d.forceStart();
       } else {
         d.force = true;
+        d.fetch();
       }
     }
-
-    this.start();
 
     return this;
   }
