@@ -365,10 +365,13 @@
         });
 
 
+        QUnit.module('Autofetch tests', {
+          teardown: function() {
+            loadrunner.Script.autoFetch = true;
+          }
+        });
 
         QUnit.test('should be able to defer start of dep using autoFetch = false', function() {
-          // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
-          //
           expect(1);
           stop(2000);
           loadrunner.Script.autoFetch = false;
@@ -381,7 +384,6 @@
               ok(false, 'loaded without start being called');
             }
 
-            loadrunner.Script.autoFetch = true;
             start();
           });
 
@@ -391,9 +393,23 @@
           }, 100);
         });
 
+        QUnit.test('should be able to defer start of dep, with a callback', function() {
+          expect(1);
+          stop(2000);
+          loadrunner.Script.autoFetch = false;
+
+          setTimeout(function() {
+
+            using('defered?123', function() {
+              ok(true, "callback fired");
+
+              start();
+            }).forceStart();
+
+          }, 100);
+        });
+
         QUnit.test('should still run provided modules immediately, despite autoFetch = false', function() {
-          // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
-          //
           expect(1);
           stop(2000);
           loadrunner.Script.autoFetch = false;
@@ -404,7 +420,6 @@
           using('laterz', function(a) {
             ok(a === 'loaded now', 'failed to use provided module');
 
-           loadrunner.Script.autoFetch = true;
             start();
           });
 
