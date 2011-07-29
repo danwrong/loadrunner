@@ -131,6 +131,8 @@
         for (var i=0, p; p = paused[i]; i++) {
           p.complete.apply(p, arguments);
         }
+
+        delete pausedDependencies[this.key()];
       }
     }
   };
@@ -303,7 +305,7 @@
         d.forceStart();
       } else {
         d.force = true;
-        d.fetch();
+        d.start();
       }
     }
 
@@ -470,7 +472,8 @@
       });
     }
 
-    if (key && ((dep = metDependencies[key]) || (dep = inProgressDependencies[key]))) {
+    if (key && ((dep = metDependencies[key]) || (dep = inProgressDependencies[key]) ||
+          (dep = pausedDependencies[key]))) {
       return {
         start: dep.startTime,
         end: dep.endTime,
@@ -484,6 +487,10 @@
 
       for (var key in inProgressDependencies) {
         pushLog(inProgressDependencies[key], 'inProgress');
+      }
+
+      for (var key in pausedDependencies) {
+        pushLog(pausedDependencies[key], 'paused');
       }
 
       return log;
