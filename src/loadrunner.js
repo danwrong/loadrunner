@@ -137,51 +137,51 @@
     return this;
   }
   Script.prototype.createScriptTag = function() {
-      var me = this, paused;
+    var me = this, paused;
 
-      scriptsInProgress[this.id] = me;
+    scriptsInProgress[this.id] = me;
 
-      if (paused = pausedScripts[this.path]) {
-        me.then(function() {
-          for (var i=0, d; d = paused[i]; i++) {
-            d.complete.apply(d, arguments);
-          }
-        });
-      }
-
-      this.times = { start: new Date() };
-
-      var script = scriptTemplate.cloneNode(false);
-
-      this.scriptId = script.id = 'LR' + ++uuid;
-      script.type = 'text/javascript';
-      script.async = true;
-
-      script.onerror = function() {
-        throw new Error(me.path + ' not loaded');
-      }
-
-      script.onreadystatechange = script.onload = function (e) {
-        e = context.event || e;
-
-        if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
-          this.onreadystatechange = null;
-          me.loaded();
+    if (paused = pausedScripts[this.path]) {
+      me.then(function() {
+        for (var i=0, d; d = paused[i]; i++) {
+          d.complete.apply(d, arguments);
         }
-      };
-      Script.prototype.queueScript = function() {
-        pausedScripts[this.path] = pausedScripts[this.path] || [];
-        pausedScripts[this.path].push(this);
-      };
+      });
+    }
 
-      script.src = this.path;
+    this.times = { start: new Date() };
 
-      currentScript = this;
-      scripts[0].parentNode.insertBefore(script, scripts[0]);
-      currentScript = null;
+    var script = scriptTemplate.cloneNode(false);
 
-      activeScripts[script.id] = this;
+    this.scriptId = script.id = 'LR' + ++uuid;
+    script.type = 'text/javascript';
+    script.async = true;
+
+    script.onerror = function() {
+      throw new Error(me.path + ' not loaded');
+    }
+
+    script.onreadystatechange = script.onload = function (e) {
+      e = context.event || e;
+
+      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
+        this.onreadystatechange = null;
+        me.loaded();
+      }
     };
+
+    script.src = this.path;
+
+    currentScript = this;
+    scripts[0].parentNode.insertBefore(script, scripts[0]);
+    currentScript = null;
+
+    activeScripts[script.id] = this;
+  };
+  Script.prototype.queueScript = function() {
+    pausedScripts[this.path] = pausedScripts[this.path] || [];
+    pausedScripts[this.path].push(this);
+  };
   Script.prototype.load = function(force) {
     if (using.autoLoad || force) {
       this.createScriptTag();
