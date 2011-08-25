@@ -240,6 +240,9 @@
     if (!useInteractive) {
       module = loadedModule;
       loadedModule = null;
+      if (!module) {
+        throw new Error('Module "'+this.id+'" requested but no module "'+this.id+'" provided by script at '+this.path);
+      }
       module.id = module.id || this.id;
 
       module.then(function(exports) {
