@@ -367,6 +367,7 @@
 
         QUnit.module('Autofetch tests', {
           teardown: function() {
+            loadrunner.reset();
             loadrunner.Script.autoFetch = true;
           }
         });

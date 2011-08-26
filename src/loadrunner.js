@@ -214,7 +214,6 @@
   }
   Module.prototype.loaded = function() {
     var p, exports, me = this;
-
     if (!useInteractive) {
       p = currentProvide;
       currentProvide = null;
@@ -223,6 +222,8 @@
         p.then(function(exports) {
           me.complete.call(me, exports);
         });
+      } else if (!this.completed) {
+        throw new Error("Tried to load '" + this.id +"' as a module, but it didn't have a 'provide()' in it.");
       }
     }
   }
@@ -497,6 +498,15 @@
     }
   }
 
+  function reset() {
+    pausedDependencies = {};
+    metDependencies = {};
+    inProgressDependencies = {};
+    using.bundles = [];
+    Module.exports = {};
+    Definition.provided = {};
+  }
+
   loadrunner.Script = Script;
   loadrunner.Module = Module;
   loadrunner.Collection = Collection;
@@ -505,6 +515,7 @@
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
   loadrunner.debug = debug;
+  loadrunner.reset = reset;
 
   context.loadrunner = loadrunner;
   context.using   = using;
