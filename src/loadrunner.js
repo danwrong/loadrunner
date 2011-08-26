@@ -222,7 +222,7 @@
         p.then(function(exports) {
           me.complete.call(me, exports);
         });
-      } else if (!this.completed) {
+      } else if (!Definition.provided[this.id]) {
         throw new Error("Tried to load '" + this.id +"' as a module, but it didn't have a 'provide()' in it.");
       }
     }
