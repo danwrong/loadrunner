@@ -26,33 +26,37 @@ Takes any number of dependencies, which can be any type of dependency object or 
 
 Dependencies are not loaded until a callback is attached.
 
-    // use some javascript files
-    using('javascripts/jquery.js', 'javascripts/underscore.js', function() {
-      $(function() {
-        _(['foo', bar', 'baz']).each(function(i) {
-          $(document.body).append('<p>' + i + '</p>');
-        });
-      })
+```javascript
+// use some javascript files
+using('javascripts/jquery.js', 'javascripts/underscore.js', function() {
+  $(function() {
+    _(['foo', bar', 'baz']).each(function(i) {
+      $(document.body).append('<p>' + i + '</p>');
     });
+  })
+});
+```
 
 Depending on the type of dependencies specified in the `using` block some arguments may be passed to the callback function.  For instance, in the case of using a module, the module's exports are passed as a function argument.
 
-    // use some modules
-    using('dom', 'events', function(dom, events) {
-      var el = dom.get('#thing');
+```javascript
+// use some modules
+using('dom', 'events', function(dom, events) {
+  var el = dom.get('#thing');
 
-      events.on(el, function() {
-        alert('kersplang');
-      });
-    });
+  events.on(el, function() {
+    alert('kersplang');
+  });
+});
 
-    // get reference to a dependency
-    var mods = using('dom', 'events');
+// get reference to a dependency
+var mods = using('dom', 'events');
 
-    // use that dependency with others
-    using(mods, 'javascripts/jquery.js', function(dom, events) {
+// use that dependency with others
+using(mods, 'javascripts/jquery.js', function(dom, events) {
 
-    });
+});
+```
 
 Using can provide all exports in a single object if required.  Just use the 'as' method.
 
