@@ -30,7 +30,7 @@ Dependencies are not loaded until a callback is attached.
 // use some javascript files
 using('javascripts/jquery.js', 'javascripts/underscore.js', function() {
   $(function() {
-    _(['foo', bar', 'baz']).each(function(i) {
+    _(['foo', 'bar', 'baz']).each(function(i) {
       $(document.body).append('<p>' + i + '</p>');
     });
   })
@@ -60,6 +60,7 @@ using(mods, 'javascripts/jquery.js', function(dom, events) {
 
 Using can provide all exports in a single object if required.  Just use the 'as' method.
 
+```javascript
     // use some modules in one object
     using('dom', 'events').as(function(imports) {
       var el = imports.dom.get('#thing');
@@ -67,9 +68,11 @@ Using can provide all exports in a single object if required.  Just use the 'as'
         alert('kersplang');
       });
     });
+```
 
 In this case, the exports are still available individually.
 
+```javascript
     // use some modules in one object, and also have them immediately available
     using('dom', 'events').as(function(imports, dom, events) {
       var el = dom.get('#thing');
@@ -77,19 +80,23 @@ In this case, the exports are still available individually.
         alert('kersplang');
       });
     });
+```
 
 Using can load scripts synchronously (in order) by being provided arguments in an array.
 
+```javascript
     // load 'dom' first, then load 'events', then execute the callback
     using(['dom', 'events'], true, function(imports) {
 
     });
+```
 
 
 __provide([id,] factory)__ => Module
 
 `provide` defines a module with the given id.  If you don't provide an id then the module's id will be inferred from the location of the javascript file that contains it (dom/events.js => dom/events).  Provide returns a type of definition, *Module*.  The second argument can be either a function that is run to define the module, or any kind of other type.  In the case of this being a function, then when the module is evaluated the function is called with a single argument, normally called *exports*, which is a function that you call to specify which public values the module exports.  Note that you can call this at any point after the module has been evaluated.  _Exporting module values is asynchronous._  Among other things, this allows seamless operation with the `using` function to allow your modules to depend on other items.
 
+```javascript
     // define a module, "config", that exports some static values
     provide('config', {
       env: 'staging',
@@ -117,27 +124,30 @@ __provide([id,] factory)__ => Module
     using('app/main', function(main) {
       alert(main); //=> 57
     });
+```
 
 Bundling
 --------
 
 Modules can be joined together in single files, provided they have names explicitly defined.  Tools such as [Loadbuilder](https://github.com/danwrong/loadbuilder) can help with automatically inserting the module names.
 
-If a module is requested in a `using` before it has been provided, loadrunner will make a call to load the module individually.  To prevent this, loadrunner provides several options:
+If a module is requested in a `using` before it has been provided, loadrunner will make a call to load the module individually.  To prevent this, loadrunner provides some options:
 
-*`loadrunner.autoFetch = false` Assumes modules will be provided in later-loading bundles, so loadrunner will not fetch scripts.  To explicitly fetch scripts, you must run `forceStart` on the dependency, eg: `using('bundle').forceStart();`
-*`using.bundles.push({'bundle': ['moda', 'modb'])` Declare the location of modules in bundles. When a module is requested, loadrunner will wait first on the evaluation of the bundle, fetching it if required.
+* `loadrunner.autoFetch = false` Assumes modules will be provided in later-loading bundles, so loadrunner will not fetch scripts.  To explicitly fetch scripts, you must run `forceStart` on the dependency, eg: `using('bundle').forceStart();`
+* `using.bundles.push({'bundle': ['moda', 'modb'])` Declare the location of modules in bundles. When a module is requested, loadrunner will wait first on the evaluation of the bundle, fetching it if required.
 
 If your wish to bundle scripts, then they must first be wrapped with `deferred` syntax, like so:
 
+```javascript
     deferred('jquery.js', function() { /* jquery source */ });
+```
 
 Loadrunner supports the `deferred` syntax through the `defer` plugin.
 
 AMD Modules
 -----------
 
-Loadrunner will have support for [AMD Modules](http://wiki.commonjs.org/wiki/Modules/AsynchronousDefinition) with the use of a plugin.  However, this support might not be complete at this time.  Please report any problems you find.
+Loadrunner will have support for [AMD Modules](http://wiki.commonjs.org/wiki/Modules/AsynchronousDefinition) with the use of a plugin.  However, this support is not be complete at this time.
 
 
 More documentation forthcoming...
