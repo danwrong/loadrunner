@@ -307,10 +307,10 @@
     return flat;
   }
 
-  function forceStart() {
+  function forceFetch() {
     for (var i=0, d; d = this.deps[i]; i++) {
-      if (d.forceStart) {
-        d.forceStart();
+      if (d.forceFetch) {
+        d.forceFetch();
       } else {
         d.force = true;
         d.start();
@@ -349,7 +349,7 @@
 
     return this;
   };
-  Collection.prototype.forceStart = forceStart;
+  Collection.prototype.forceFetch = forceFetch;
   Collection.prototype.as = function(cb) {
     var me = this;
 
@@ -387,7 +387,7 @@
 
     return this;
   }
-  Sequence.prototype.forceStart = forceStart;
+  Sequence.prototype.forceFetch = forceFetch;
 
   function interactiveScript() {
     for (var i in scripts) {

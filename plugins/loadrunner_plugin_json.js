@@ -15,27 +15,17 @@
   TODO: THERE IS CURRENTLY NO HANDLING FOR LOAD ERRORS.
 
 */
-loadrunner(function(using, provide, loadrunner, define) {
-  function JSONy(path) {
-    this.id = this.path = path;
-  }
-  JSONy.inProgress = [];
-  JSONy.done = [];
-  JSONy.prototype = new loadrunner.Dependency;
-  JSONy.prototype.start = function() {
-    var me = this, dep;
-    if (dep = JSONy.done[this.id]) {
-      this.complete(dep.result);
-    } else if (dep = JSONy.inProgress[this.id]) {
-      dep.then(function() {
-        me.complete(dep.result);
-      });
-    } else {
-      JSONy.inProgress[this.id] = this;
-      this.load();
-    }
+loadrunner(function(using, provide, loadrunner) {
+
+  function JSONDependency(id, force) {
+    this.path = this.id = id;
+    this.force = !!force;
   };
-  JSONy.prototype.load = function() {
+  JSONDependency.prototype = new loadrunner.Script;
+  JSONDependency.prototype.key = function() {
+    return 'json_' + this.id;
+  };
+  JSONDependency.prototype.fetch = function() {
     var xhr, me = this;
     if(window.XMLHttpRequest) {
       xhr = new window.XMLHttpRequest();
@@ -50,8 +40,6 @@ loadrunner(function(using, provide, loadrunner, define) {
     xhr.onreadystatechange = function() {
       if(xhr.readyState == 4) {
         me.result = xhr.responseText;
-        JSONy.done[me.id] = me;
-        delete JSONy.inProgress[me.id];
         me.complete(me.result);
       }
     };
@@ -60,6 +48,7 @@ loadrunner(function(using, provide, loadrunner, define) {
   };
 
   using.matchers.add(/^json!/, function(path) {
-    return new JSONy(path.substring(5));
+    return new JSONDependency(path.substring(5));
   });
+
 });

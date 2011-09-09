@@ -389,7 +389,7 @@
 
           setTimeout(function() {
             startCalled = true;
-            using('defered').forceStart();
+            using('defered').forceFetch();
           }, 100);
         });
 
@@ -404,7 +404,7 @@
               ok(true, "callback fired");
 
               start();
-            }).forceStart();
+            }).forceFetch();
 
           }, 100);
         });
