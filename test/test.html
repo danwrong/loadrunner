@@ -425,6 +425,15 @@
 
         });
 
+        QUnit.test('should be able to detect unprovided modules using debug', function() {
+          expect(1);
+          loadrunner.Script.autoFetch = false;
+
+          using('neverheardofuz', function(a) {
+          });
+          ok(loadrunner.debug().paused['module_neverheardofuz'], 'Paused dependency found');
+        });
+
         QUnit.module('Depth test');
         QUnit.test('should cope with a deep Sequence', function() {
          expect(1);
@@ -445,6 +454,26 @@
          });
         });
 
+        QUnit.module('Case test', {
+          setup:function() {
+            this.conlog = console.log;
+          },
+          teardown:function() {
+            console.log = this.conlog;
+          }
+        });
+        QUnit.test('should warn about case sensitivity', function() {
+          expect(2);
+          stop(5000);
+          console.log = function(msg) {
+            ok(true, msg);
+          }
+
+          using('moda', 'ModA', function(moda) {
+            equals('success', moda.test, 'module exports loaded');
+            start();
+          });
+        });
 
      }
     </script>

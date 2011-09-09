@@ -126,6 +126,14 @@ __provide([id,] factory)__ => Module
     });
 ```
 
+Debugging
+--------
+
+Loadrunner provides a debug command to run in the console.  Enter `loadrunner.debug()`, and you'll see a set of met, inProgress and paused dependencies.
+
+Another great debugging method is to inspect `loadrunner.Module.exports`.
+
+
 Bundling
 --------
 

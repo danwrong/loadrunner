@@ -94,6 +94,11 @@
           dep.complete.apply(dep, arguments);
         });
     } else {
+      for (var depId in aug({}, metDependencies, inProgressDependencies, pausedDependencies)) {
+        if (depId.toLowerCase()==this.key().toLowerCase() && depId!=this.key()) {
+          console && console.log('Warning: attempting to load two modules with similar names:', depId, this.key());
+        }
+      }
       if (this.shouldFetch()) {
         inProgressDependencies[this.key()] = this;
         this.fetch();
@@ -462,17 +467,18 @@
   }
 
   function debug(key) {
-    var dep, log = [];
+    var dep, log = {};
 
     function pushLog(dep, status) {
-      log.push({
+      log[status] = log[status] || {};
+      log[status][key] = {
         key: key,
         start: dep.startTime,
         end: dep.endTime,
         duration: dep.endTime - (dep.startTime || (new Date).getTime()),
         status: status,
         origin: dep
-      });
+      };
     }
 
     if (key && ((dep = metDependencies[key]) || (dep = inProgressDependencies[key]) ||
