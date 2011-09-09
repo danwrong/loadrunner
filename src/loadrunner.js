@@ -107,7 +107,7 @@
     return true;
   }
   Dependency.prototype.complete = function() {
-    var paused;
+    var paused, me=this;
 
     this.endTime = (new Date).getTime();
 
@@ -123,7 +123,9 @@
 
       if (this.callbacks) {
         for (var i=0, cb; cb = this.callbacks[i]; i++) {
-          cb.apply(context, this.results);
+          (function(cb) {
+            setTimeout(function() { cb.apply(context, me.results); }, 0);
+          }(cb));
         }
       }
 

@@ -15,7 +15,6 @@
     <script type="text/javascript" charset="utf-8">
      function runTests() {
 
-
         QUnit.module('script tag options');
 
          QUnit.test('should be able to set load path with data-path', function() {
@@ -426,6 +425,27 @@
 
         });
 
+        QUnit.module('Depth test');
+        QUnit.test('should cope with a deep Sequence', function() {
+         expect(1);
+         stop(5000);
+
+         using('deep', function(deep) {
+           equals('success', deep, 'module exports loaded');
+           start();
+         });
+        });
+        QUnit.test('should cope with many identical module loads', function() {
+         expect(1);
+         stop(5000);
+
+         using('many', function(many) {
+           equals('success', many, 'module exports loaded');
+           start();
+         });
+        });
+
+
      }
     </script>
 
@@ -453,6 +473,7 @@
           a.onreadystatechange = function () {
             if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
               this.onreadystatechange = null;
+              this.onload = null;
               runTests();
             }
           };
