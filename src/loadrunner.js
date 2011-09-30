@@ -2,10 +2,10 @@
   var useInteractive = context.attachEvent && !context.opera,
       scripts = document.getElementsByTagName('script'), uuid = 0,
       scriptTag, scriptTemplate = document.createElement('script'),
-      scriptsInProgress = {}, modulesInProgress = {}, loadedModule,
-      currentScript, activeScripts = {}, oldUsing = context.using,
-      oldProvide = context.provide, oldDefine = context.define,
-      oldLoadrunner = context.loadrunner, pausedScripts = {};
+      currentProvide, currentScript, activeScripts = {}, oldUsing = context.using,
+      oldProvide = context.provide, oldLoadrunner = context.loadrunner;
+
+  var pausedDependencies = {}, metDependencies = {}, inProgressDependencies = {};
 
   for (var i=0, s; s = scripts[i]; i++) {
     if (s.src.match(/loadrunner\.js(\?|#|$)/)) {
@@ -51,7 +51,6 @@
   }
 
   function pushObjPath(obj, path, newobj) {
-    // pushObjPath(thing, 'a/b/c', new) //=> thing.a.b.c = new
     var names = path.split('/'), cursor = obj;
     while (names.length > 1) {
       var name = names.shift();
@@ -60,96 +59,105 @@
     cursor[names[0]] = newobj;
   }
 
- /*
- if (me.collectResults) {
-   if (dep instanceof Sequence) {
-     aug(allResults[0], dep.results[0]);
-   } else {
-     pushObjPath(allResults[0], dep.id, dep.results[0]);
-   }
- } else {
- */
-
   function Dependency() {}
-  Dependency.prototype.then = function(cb) {
-    var dep = this;
 
-    if (!this.started) {
-      this.started = true;
-      this.start();
-    }
+  Dependency.prototype.then = function(cb) {
+    this.callbacks = this.callbacks || [];
+    this.callbacks.push(cb);
 
     if (this.completed) {
       cb.apply(context, this.results);
     } else {
-      this.callbacks = this.callbacks || [];
-      this.callbacks.push(cb);
+      if (this.callbacks.length == 1) {
+        this.start();
+      }
     }
 
     return this;
   };
-  Dependency.prototype.start = function() {};
+  Dependency.prototype.key = function() {
+    if (!this.id) {
+      this.id = uuid++;
+    }
+
+    return 'dependency_' + this.id;
+  };
+  Dependency.prototype.start = function() {
+    var dep = this, met, inProgress;
+
+    this.startTime = (new Date).getTime();
+
+    if (met = metDependencies[this.key()]) {
+      this.complete.apply(this, met.results);
+    } else if (inProgress = inProgressDependencies[this.key()]) {
+        inProgress.then(function() {
+          dep.complete.apply(dep, arguments);
+        });
+    } else {
+      if (this.shouldFetch()) {
+        inProgressDependencies[this.key()] = this;
+        this.fetch();
+      } else {
+        pausedDependencies[this.key()] = pausedDependencies[this.key()] || [];
+        pausedDependencies[this.key()].push(this);
+      }
+    }
+  };
+  Dependency.prototype.shouldFetch = function() {
+    return true;
+  }
   Dependency.prototype.complete = function() {
+    var paused, me=this;
+
+    this.endTime = (new Date).getTime();
+
+    delete inProgressDependencies[this.key()];
+
+    if (!metDependencies[this.key()]) {
+      metDependencies[this.key()] = this;
+    }
+
     if (!this.completed) {
       this.results = makeArray(arguments);
       this.completed = true;
 
       if (this.callbacks) {
         for (var i=0, cb; cb = this.callbacks[i]; i++) {
-          cb.apply(context, this.results);
+          (function(cb) {
+            setTimeout(function() { cb.apply(context, me.results); }, 0);
+          }(cb));
         }
+      }
+
+      if (paused = pausedDependencies[this.key()]) {
+        for (var i=0, p; p = paused[i]; i++) {
+          p.complete.apply(p, arguments);
+        }
+
+        delete pausedDependencies[this.key()];
       }
     }
   };
 
   function Script(path, force) {
-    if (path) this.id = this.path = this.resolvePath(path);
+    if (path) {
+      this.id = this.path = this.resolvePath(path);
+    }
     this.force = !!force;
   }
-  Script.loaded = [];
-  Script.times = {};
+  Script.autoFetch = true;
   Script.prototype = new Dependency;
   Script.prototype.resolvePath = function(path) {
-    return whichBundle(path);
+    return (whichBundle(path) != path) ? whichBundle(path) : path;
   }
-  Script.prototype.start = function() {
-    var me = this, dep, module;
-
-    // provide ability to provide a script inline, like you would a module
-    // so here, we say "if script is already provided, use that"
-    if (module = modulesInProgress[this.id]) {
-      module.then(function() {
-        me.complete();
-      });
-      return this;
-    }
-
-    if (dep = scriptsInProgress[this.id]) {
-      dep.then(function() {
-        me.loaded();
-      });
-    } else if (!this.force && indexOf(Script.loaded, this.id) > -1) {
-      this.loaded();
-    } else {
-      this.load();
-    }
-
-    return this;
-  }
-  Script.prototype.createScriptTag = function() {
-    var me = this, paused;
-
-    scriptsInProgress[this.id] = me;
-
-    if (paused = pausedScripts[this.path]) {
-      me.then(function() {
-        for (var i=0, d; d = paused[i]; i++) {
-          d.complete.apply(d, arguments);
-        }
-      });
-    }
-
-    this.times = { start: new Date() };
+  Script.prototype.key = function() {
+    return "script_" + this.id;
+  };
+  Script.prototype.shouldFetch = function() {
+    return Script.autoFetch || this.force;
+  };
+  Script.prototype.fetch = function() {
+    var me = this;
 
     var script = scriptTemplate.cloneNode(false);
 
@@ -178,102 +186,107 @@
 
     activeScripts[script.id] = this;
   };
-  Script.prototype.queueScript = function() {
-    pausedScripts[this.path] = pausedScripts[this.path] || [];
-    pausedScripts[this.path].push(this);
-  };
-  Script.prototype.load = function(force) {
-    if (using.autoLoad || force) {
-      this.createScriptTag();
-    } else {
-      this.queueScript();
-    }
-    return this;
-  }
+
   Script.prototype.loaded = function() {
     this.complete();
   }
-  Script.prototype.complete = function() {
-    if (indexOf(Script.loaded, this.id) == -1) {
-      Script.loaded.push(this.id);
-    }
-    if (this.times) {
-      Script.times[this.id] = aug(this.times, { end: new Date() });
-    }
-    delete scriptsInProgress[this.id];
-    Dependency.prototype.complete.apply(this, arguments);
-  }
 
-  function Module(id, body) {
+  function Module(id, force) {
     this.id = id;
-    this.body = body;
-
-    if (typeof body == 'undefined') {
-      this.path = this.resolvePath(id);
-    }
-
-
+    this.path = this.resolvePath(id);
+    this.force = force;
   }
   Module.exports = {};
   Module.prototype = new Script;
+  Module.prototype.start = function() {
+    var me = this, def;
+
+    if (def = Definition.provided[this.id]) {
+      def.then(function(exports) {
+        me.complete.call(me, exports);
+      });
+    } else {
+      Script.prototype.start.call(this);
+    }
+  };
+  Module.prototype.key = function() {
+    return 'module_' + this.id;
+  }
   Module.prototype.resolvePath = function(id) {
     return (whichBundle(id) != id) ? whichBundle(id) : path(using.path, id + '.js');
   }
-  Module.prototype.start = function() {
-    var exports, module, me = this, oldCurrent;
-    if (this.body) {
-      this.execute();
-    } else if (exports = Module.exports[this.id]) {
-      this.exp(exports);
-    } else if (module = modulesInProgress[this.id]) {
-      module.then(function(exports) {
-        me.exp(exports);
-      });
-    } else {
-      modulesInProgress[this.id] = this;
-      this.load();
-    }
-  }
   Module.prototype.loaded = function() {
-    var module, exports, me = this;
-
+    var p, exports, me = this;
     if (!useInteractive) {
-      module = loadedModule;
-      loadedModule = null;
-      module.id = module.id || this.id;
+      p = currentProvide;
+      currentProvide = null;
 
-      module.then(function(exports) {
-        me.exp(exports);
-      });
-    } else {
-      if (exports = Module.exports[this.id]) {
-        this.exp(exports);
-      } else if (module = modulesInProgress[this.id]) {
-        module.then(function(exports) {
-          me.exp(exports);
+      if (p) {
+        p.then(function(exports) {
+          me.complete.call(me, exports);
         });
+      } else if (!Definition.provided[this.id]) {
+        throw new Error("Tried to load '" + this.id +"' as a module, but it didn't have a 'provide()' in it.");
       }
     }
   }
-  Module.prototype.complete = function() {
-    delete modulesInProgress[this.id];
-    Script.prototype.complete.apply(this, arguments);
+
+  function Definition(id, body) {
+    var module;
+
+    this.id = id;
+    this.body = body;
+
+    if (!id) {
+      if (useInteractive) {
+        module = currentScript || interactiveScript();
+
+
+        if (module) {
+          delete activeScripts[module.scriptId];
+
+          this.then(function(exports) {
+            module.complete.call(module, exports);
+          });
+        }
+      } else {
+        currentProvide = this;
+      }
+    } else {
+      Definition.provided[this.id] = this;
+
+      if (module = inProgressDependencies['module_' + this.id]) {
+       this.then(function(exports) {
+         module.complete.call(module, exports);
+       });
+      }
+    }
   }
-  Module.prototype.execute = function() {
+  Definition.provided = {};
+  Definition.prototype = new Dependency;
+  Definition.prototype.key = function() {
+    if (!this.id) this.id = "anon_" + uuid++;
+    return 'definition_' + this.id;
+  };
+  Definition.prototype.fetch = function() {
     var me = this;
+
     if (typeof this.body == 'object') {
-      this.exp(this.body);
+      this.complete(this.body);
     } else if (typeof this.body == 'function') {
-      this.body.apply(window, [function(exports) {
-        me.exp(exports);
-      }]);
+      this.body.call(window, function(exports) {
+        me.complete(exports);
+      });
     }
   }
-  Module.prototype.exp = function(exports) {
-    if (this.times) {
-      aug(this.times, { eval: new Date() });
+  Definition.prototype.complete = function(exports) {
+    exports = exports || {};
+
+    if (this.id) {
+      this.exports = Module.exports[this.id] = exports;
     }
-    this.complete(this.exports = Module.exports[this.id] = exports || {});
+
+    Dependency.prototype.complete.call(this, exports);
   }
 
   function flattenDeps(deps) {
@@ -290,6 +303,19 @@
     return flat;
   }
 
+  function forceFetch() {
+    for (var i=0, d; d = this.deps[i]; i++) {
+      if (d.forceFetch) {
+        d.forceFetch();
+      } else {
+        d.force = true;
+        d.start();
+      }
+    }
+
+    return this;
+  }
+
   function Collection(deps) {
     this.deps = deps;
     if (this.deps.length == 0) {
@@ -297,7 +323,7 @@
     }
   }
   Collection.prototype = new Dependency;
-  Collection.prototype.start = function() {
+  Collection.prototype.fetch = function() {
     var me = this;
 
     function depComplete() {
@@ -319,14 +345,7 @@
 
     return this;
   };
-  Collection.prototype.load = function() {
-    for (var i=0, d; d = this.deps[i]; i++) {
-      if (d.load) {
-        d.load(true);
-      }
-    }
-    return this;
-  }
+  Collection.prototype.forceFetch = forceFetch;
   Collection.prototype.as = function(cb) {
     var me = this;
 
@@ -345,7 +364,7 @@
     this.deps = deps;
   }
   Sequence.prototype = new Dependency;
-  Sequence.prototype.start = function() {
+  Sequence.prototype.fetch = function() {
     var me = this, nextDep = 0, allResults = [];
 
     (function next() {
@@ -364,20 +383,7 @@
 
     return this;
   }
-  Sequence.prototype.load = function() {
-    var me = this, nextDep = 0;
-
-    (function next() {
-      var dep = me.deps[nextDep++];
-      if (dep && dep.load) {
-        dep.load(true).then(function() {
-          next();
-        });
-      }
-    }());
-
-    return this;
-  }
+  Sequence.prototype.forceFetch = forceFetch;
 
   function interactiveScript() {
     for (var i in scripts) {
@@ -385,26 +391,6 @@
         return activeScripts[scripts[i].id];
       }
     }
-  }
-
-  function defineModule(name, body) {
-    var module;
-
-    if (!name && useInteractive) {
-      module = currentScript || interactiveScript();
-    }
-
-    if (module) {
-      delete activeScripts[module.scriptId];
-      module.body = body;
-      // If 'execute' method is not found here, you're wrongly loading this as a script instead of a module
-      module.execute();
-    } else {
-      loadedModule = module = new Module(name, body);
-      modulesInProgress[module.id] = module;
-    }
-
-    return module;
   }
 
   function provide() {
@@ -416,90 +402,8 @@
 
     body = args.shift();
 
-    return defineModule(name, body);
+    return new Definition(name, body);
   }
-
-  function amdResolve(id, mod) {
-    // replace the './' on the id with the dir taken from the mod id.
-    var from = mod.id || '';
-    var parts = from.split('/'); parts.pop();
-    var dir = parts.join('/');
-    return id.replace(/^\./, dir);
-  }
-
-  function amdMap(args, mod) {
-    var mapped = [];
-
-    function require(id) {
-      return Module.exports[amdResolve(id, mod)];
-    }
-
-    for (var i=0, len = args.length; i < len; i++) {
-      if (args[i] == 'require') {
-        mapped.push(require);
-        continue;
-      }
-
-      if (args[i] == 'exports') {
-        mod.exports = mod.exports || {};
-        mapped.push(mod.exports);
-        continue;
-      }
-
-      mapped.push(require(args[i]));
-    }
-    return mapped;
-  }
-
-  function amdDefine() {
-    var args = makeArray(arguments), dependencies = [], id, factory;
-
-    if (typeof args[0] == 'string') {
-      id = args.shift();
-    }
-
-    if (isArray(args[0])) {
-      dependencies = args.shift();
-    }
-
-    factory = args.shift();
-
-    var mod = defineModule(id, function(exports) {
-      var mods = [];
-
-      function executeAMD() {
-        var args = amdMap(makeArray(dependencies), mod), exported;
-
-        if (typeof factory == 'function') {
-          exported = factory.apply(mod, args);
-        } else {
-          exported = factory;
-        }
-
-        if (typeof exported == 'undefined') {
-          exported = mod.exports;
-        }
-
-        exports(exported);
-      }
-
-      for (var i=0, len=dependencies.length; i < len; i++) {
-        var d = dependencies[i];
-        if (indexOf(['require', 'exports'], d) == -1) {
-          mods.push(amdResolve(d, mod));
-        }
-      }
-
-      if (mods.length > 0) {
-        using.apply(this, mods.concat(executeAMD));
-      } else {
-        executeAMD();
-      }
-    });
-    return mod;
-  }
-
-  amdDefine.amd = {};
 
   function using() {
     var deps = makeArray(arguments), callback;
@@ -548,31 +452,80 @@
   }
 
   var loadrunner = function(f) {
-    return f(using, provide, loadrunner, amdDefine);
+    return f(using, provide, loadrunner);
   }
 
   function noConflict() {
     context.using = oldUsing;
     context.provide = oldProvide;
-    context.define = oldDefine;
     context.loadrunner = oldLoadrunner;
     return loadrunner;
+  }
+
+  function debug(key) {
+    var dep, log = {};
+
+    function pushLog(dep, status) {
+      log[status] = log[status] || {};
+      log[status][key] = {
+        key: key,
+        start: dep.startTime,
+        end: dep.endTime,
+        duration: dep.endTime - (dep.startTime || (new Date).getTime()),
+        status: status,
+        origin: dep
+      };
+    }
+
+    if (key && ((dep = metDependencies[key]) || (dep = inProgressDependencies[key]) ||
+          (dep = pausedDependencies[key]))) {
+      return {
+        start: dep.startTime,
+        end: dep.endTime,
+        duration: dep.endTime - (dep.startTime || (new Date).getTime()),
+        origin: dep
+      };
+    } else {
+      for (var key in metDependencies) {
+        pushLog(metDependencies[key], 'met');
+      }
+
+      for (var key in inProgressDependencies) {
+        pushLog(inProgressDependencies[key], 'inProgress');
+      }
+
+      for (var key in pausedDependencies) {
+        pushLog(pausedDependencies[key], 'paused');
+      }
+
+      return log;
+    }
+  }
+
+  function reset() {
+    pausedDependencies = {};
+    metDependencies = {};
+    inProgressDependencies = {};
+    using.bundles = [];
+    Module.exports = {};
+    Definition.provided = {};
   }
 
   loadrunner.Script = Script;
   loadrunner.Module = Module;
   loadrunner.Collection = Collection;
   loadrunner.Sequence = Sequence;
+  loadrunner.Definition = Definition;
   loadrunner.Dependency = Dependency;
   loadrunner.noConflict = noConflict;
+  loadrunner.debug = debug;
+  loadrunner.reset = reset;
 
   context.loadrunner = loadrunner;
   context.using   = using;
   context.provide = provide;
-  context.define  = amdDefine;
 
   using.path = '';
-  using.autoLoad = true;
 
   using.bundles = [];
 
@@ -594,13 +547,13 @@
   }
 
   using.matchers.add(/(^script!|\.js$)/, function(path) {
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''), false);
-    script.id = path;
+    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''));
     return script;
   });
 
   using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
-    return new Module(id);
+    var mod = new Module(id.replace(/!$/, ''));
+    return mod;
   });
 
   if (scriptTag) {

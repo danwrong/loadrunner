@@ -15,7 +15,6 @@
     <script type="text/javascript" charset="utf-8">
      function runTests() {
 
-
         QUnit.module('script tag options');
 
          QUnit.test('should be able to set load path with data-path', function() {
@@ -40,7 +39,7 @@
          });
 
          QUnit.test('should be able to define with a function', function() {
-           var mod = provide('test', function(exports) {
+           var mod = provide('test2', function(exports) {
              exports({
                a: 1,
                b: 'thing'
@@ -51,393 +50,431 @@
            stop(200);
 
            mod.then(function() {
-             equals(1, mod.exports.a, 'exports.a set');
-             equals('thing', mod.exports.b, 'exports.b set');
+             equals(mod.exports.a, 1, 'exports.a set');
+             equals(mod.exports.b, 'thing', 'exports.b set');
              start();
            });
          });
 
-         QUnit.module('require - file');
+       QUnit.module('require - file');
 
-         QUnit.test('should require a single normal file', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require a single normal file', function() {
+         expect(1);
+         stop(1000);
 
-           using('javascripts/e.js', function() {
-             ok(loadedE, 'e.js was executed');
-             start();
-           });
+         using('javascripts/e.js', function() {
+           ok(loadedE, 'e.js was executed');
+           start();
          });
+       });
 
-         QUnit.test('should require a file prefixed with $ from using.path', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require a file prefixed with $ from using.path', function() {
+         expect(1);
+         stop(1000);
 
-           loadScript = false;
+         loadScript = false;
 
-           using('$sub/script.js', function() {
-             ok(loadScript, 'script.js was executed');
-             start();
-           });
+         using('$sub/script.js', function() {
+           ok(loadScript, 'script.js was executed');
+           start();
          });
+       });
 
-         QUnit.test('should require multiple files in parallel', function() {
-           expect(2);
-           stop(1000);
+       QUnit.test('should require multiple files in parallel', function() {
+         expect(2);
+         stop(1000);
 
-           using('javascripts/c.js', 'javascripts/d.js', function() {
-             ok(loadedC, 'c.js was executed');
-             ok(loadedD, 'd.js was executed');
-             start();
-           });
+         using('javascripts/c.js', 'javascripts/d.js', function() {
+           ok(loadedC, 'c.js was executed');
+           ok(loadedD, 'd.js was executed');
+           start();
          });
+       });
 
-         QUnit.test('should require a file only once', function() {
-           expect(2);
-           stop(1000);
+       QUnit.test('should require a file only once', function() {
+         expect(2);
+         stop(1000);
 
-           bLoadCount = 0;
+         bLoadCount = 0;
+
+         using('javascripts/b.js', function() {
+           ok(bLoadCount, 'b.js was executed');
 
            using('javascripts/b.js', function() {
-             ok(bLoadCount, 'b.js was executed');
-
-             using('javascripts/b.js', function() {
-               equal(1, bLoadCount, 'b.js was not loaded again');
-               start();
-             });
-
-           });
-         });
-
-         QUnit.module('require - module');
-
-         QUnit.test('should require a module', function() {
-           expect(1);
-           stop(1000);
-
-           using('moda', function(moda) {
-             equals('success', moda.test, 'module exports loaded');
+             equal(1, bLoadCount, 'b.js was not loaded again');
              start();
            });
+
          });
+       });
 
-         QUnit.test('should require multiple modules', function() {
-           expect(2);
-           stop(1000);
+       QUnit.module('require - module');
 
-           using('moda', 'modb', function(moda, modb) {
-             equals('success', moda.test, 'moda exports loaded');
-             equals('success', modb.test(), 'modb exports loaded');
-             start();
-           });
+       QUnit.test('should require a module', function() {
+         expect(1);
+         stop(1000);
+
+         using('moda', function(moda) {
+           equals('success', moda.test, 'module exports loaded');
+           start();
          });
+       });
 
-         QUnit.test('should require modules that have a dependency', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require multiple modules', function() {
+         expect(2);
+         stop(1000);
 
-           using('modc', function(modc) {
-             equals('success from mod a', modc.test(), 'modc exports loaded');
-             start();
-           });
+         using('moda', 'modb', function(moda, modb) {
+           equals('success', moda.test, 'moda exports loaded');
+           equals('success', modb.test(), 'modb exports loaded');
+           start();
          });
+       });
 
-         QUnit.test('should require modules that have nested dependencies', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require modules that have a dependency', function() {
+         expect(1);
+         stop(1000);
 
-           using('modd', function(modd) {
-             equals('success from mod a via mod d', modd.test(), 'modd exports loaded');
-             start();
-           });
+         using('modc', function(modc) {
+           equals('success from mod a', modc.test(), 'modc exports loaded');
+           start();
          });
+       });
 
-         QUnit.test('should require modules that have dependencies on regular scripts', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require modules that have nested dependencies', function() {
+         expect(1);
+         stop(1000);
 
-           using('mode', function(mode) {
-             ok(mode.test(), 'mode ensured d.js was loaded');
-             start();
-           });
+         using('modd', function(modd) {
+           equals('success from mod a via mod d', modd.test(), 'modd exports loaded');
+           start();
          });
+       });
 
-         QUnit.test('should require modules that have dependencies on regular scripts', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require modules that have dependencies on regular scripts', function() {
+         expect(1);
+         stop(1000);
 
-           using('mode', function(mode) {
-             ok(mode.test(), 'mode ensured d.js was loaded');
-             start();
-           });
+         using('mode', function(mode) {
+           ok(mode.test(), 'mode ensured d.js was loaded');
+           start();
          });
+       });
 
-         QUnit.test('should require modules that are in subfolders', function() {
-           expect(1);
-           stop(1000);
+       QUnit.test('should require modules that are in subfolders', function() {
+         expect(1);
+         stop(1000);
 
-           using('sub/modsubfolder', function(modsubfolder) {
-             ok(modsubfolder.test(), 'mode ensured d.js was loaded');
-             start();
-           });
+         using('sub/modsubfolder', function(modsubfolder) {
+           ok(modsubfolder.test(), 'mode ensured d.js was loaded');
+           start();
          });
+       });
 
-         QUnit.test('should collect module results into a single parameter if requested', function() {
-           expect(2);
-           stop(1000);
+       QUnit.test('should collect module results into a single parameter if requested', function() {
+         expect(2);
+         stop(1000);
 
-           using('moda', 'modb').as(function(results) {
-             equals('success', results.moda.test, 'moda exports loaded');
-             equals('success', results.modb.test(), 'modb exports loaded');
-             start();
-           });
+         using('moda', 'modb').as(function(results) {
+           equals('success', results.moda.test, 'moda exports loaded');
+           equals('success', results.modb.test(), 'modb exports loaded');
+           start();
          });
+       });
 
-         QUnit.test('should collect module results without overwriting namespaces', function() {
-           expect(2);
-           stop(1000);
+       QUnit.test('should collect module results without overwriting namespaces', function() {
+         expect(2);
+         stop(1000);
 
-           using('sub/submoda', 'sub/submodb').as(function(results) {
-             equals('success', results.sub.submodb.test(), 'sub.submodb exports loaded');
-             equals('success', results.sub.submoda.test, 'sub.submoda exports loaded');
-             start();
-           });
+         using('sub/submoda', 'sub/submodb').as(function(results) {
+           equals('success', results.sub.submodb.test(), 'sub.submodb exports loaded');
+           equals('success', results.sub.submoda.test, 'sub.submoda exports loaded');
+           start();
          });
+       });
 
-         QUnit.module('loadrunner.Script.loaded');
+       QUnit.module('Sequences');
 
-         QUnit.test('should list files loaded in order', function() {
-           bLoadCount = 0;
-           loadrunner.Script.loaded = [];
-           loadrunner.Module.exports = {};
+       QUnit.test('should use dependencies in sequence if array argument', function() {
+         window.testSeq = [];
 
-           expect(1);
-           stop(1000);
+         expect(1);
+         stop(1000);
 
-           using('javascripts/a.js', function() {
-             using('javascripts/b.js', function() {
-               using('moda', function() {
-                 deepEqual(
-                   loadrunner.Script.loaded, ['javascripts/a.js', 'javascripts/b.js', 'moda'],
-                   'require.loaded has files in correct order');
-                 start();
-               });
-             });
-           });
+         using(['javascripts/s1.js', 'javascripts/s2.js', 'javascripts/s3.js'], function() {
+           deepEqual(window.testSeq, [1,2,3], 'scripts executed in sequence');
+           start();
          });
+       });
 
-         QUnit.module('Sequences');
+       QUnit.test('should return modules in sequence if array argument', function() {
+          expect(3);
+          stop(1000);
 
-         QUnit.test('should use dependencies in sequence if array argument', function() {
-           window.testSeq = [];
-
-           expect(1);
-           stop(1000);
-
-           using(['javascripts/s1.js', 'javascripts/s2.js', 'javascripts/s3.js'], function() {
-             deepEqual(window.testSeq, [1,2,3], 'scripts executed in sequence');
-             start();
-           });
-         });
-
-         QUnit.test('should return modules in sequence if array argument', function() {
-            expect(3);
-            stop(1000);
-
-            using('modb', ['moda', 'modb'], 'moda', function(modb2, moda, modb, moda2) {
-              equals('success', moda.test, 'moda exports loaded from sequence');
-              equals('success', modb.test(), 'modb exports loaded from sequence');
-              equals('success', moda2.test, 'moda exports loaded outside sequence');
-              start();
-            });
+          using('modb', ['moda', 'modb'], 'moda', function(modb2, moda, modb, moda2) {
+            equals('success', moda.test, 'moda exports loaded from sequence');
+            equals('success', modb.test(), 'modb exports loaded from sequence');
+            equals('success', moda2.test, 'moda exports loaded outside sequence');
+            start();
           });
+        });
 
-          QUnit.test('should return modules in sequence if nested array argument', function() {
-             expect(3);
-             stop(1000);
-
-             using(['modb', ['moda', 'modb'], 'moda'], function(modb2, moda, modb, moda2) {
-               equals('success', moda.test, 'moda exports loaded from sequence');
-               equals('success', modb.test(), 'modb exports loaded from sequence');
-               equals('success', moda2.test, 'moda exports loaded outside sequence');
-               start();
-             });
-           });
-
-         QUnit.test('should return collected modules if array argument', function() {
+        QUnit.test('should return modules in sequence if nested array argument', function() {
            expect(3);
            stop(1000);
 
-           using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda').as(function(results, dead) {
-             equals('success', results.moda.test, 'moda exports loaded');
-             equals('success', results.modb.test(), 'modb exports loaded');
-             equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
+           using(['modb', ['moda', 'modb'], 'moda'], function(modb2, moda, modb, moda2) {
+             equals('success', moda.test, 'moda exports loaded from sequence');
+             equals('success', modb.test(), 'modb exports loaded from sequence');
+             equals('success', moda2.test, 'moda exports loaded outside sequence');
              start();
            });
          });
 
-         QUnit.test('should return collected modules if nested array argument', function() {
-           expect(3);
-           stop(1000);
+       QUnit.test('should return collected modules if array argument', function() {
+         expect(3);
+         stop(1000);
 
-           using(['moda', ['moda', 'modb', 'sub/modsubfolder']]).as(function(results) {
-             equals('success', results.moda.test, 'moda exports loaded');
-             equals('success', results.modb.test(), 'modb exports loaded');
-             equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
-             start();
-           });
+         using('moda', ['moda', 'modb', 'sub/modsubfolder'], 'moda').as(function(results, dead) {
+           equals('success', results.moda.test, 'moda exports loaded');
+           equals('success', results.modb.test(), 'modb exports loaded');
+           equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
+           start();
          });
+       });
 
-         // QUnit.module('built files');
-         //
-         //        QUnit.test('should correctly execute code from built file', function() {
-         //          loadrunner.Script.loaded = [];
-         //          loadrunner.Module.exports = {};
-         //
-         //          expect(1);
-         //          stop(1000);
-         //
-         //          using('javascripts/compiled.js', function() {
-         //            using('modcompiled', function(modd) {
-         //              equals(modd.test(), 'success from mod a via modcompiled', 'modd exports loaded');
-         //              start();
-         //            });
-         //          });
-         //        });
+       QUnit.test('should return collected modules if nested array argument', function() {
+         expect(3);
+         stop(1000);
 
-          QUnit.module('AMD support');
+         using(['moda', ['moda', 'modb', 'sub/modsubfolder']]).as(function(results) {
+           equals('success', results.moda.test, 'moda exports loaded');
+           equals('success', results.modb.test(), 'modb exports loaded');
+           equals('truesuccess from mod a via mod d', results.sub.modsubfolder.test(), 'modb exports loaded');
+           start();
+         });
+       });
 
-          QUnit.test('should load an AMD module defined with an object literal', function() {
-            expect(1);
-            stop(2000);
+        // QUnit.module('AMD support');
+        //
+        //         QUnit.test('should load an AMD module defined with an object literal', function() {
+        //           expect(1);
+        //           stop(2000);
+        //
+        //           using('amd/modlit', function(a) {
+        //             equals(a.test, 'success', 'loaded mod defined object literal');
+        //             start();
+        //           });
+        //         });
+        //
+        //
+        //         QUnit.test('should load an AMD module defined with a function', function() {
+        //           expect(1);
+        //           stop(2000);
+        //
+        //           using('amd/modnodep', function(a) {
+        //             equals(a.test, 'success', 'loaded mod defined with function');
+        //             start();
+        //           });
+        //         });
+        //
+        //         QUnit.test('should load an AMD module with dependencies', function() {
+        //           expect(1);
+        //           stop(2000);
+        //
+        //           using('amd/moda', function(a) {
+        //             equals(a.moda, 'success', 'loaded mod with dependencies');
+        //             start();
+        //           });
+        //         });
+        //
+        //         QUnit.test('should load an AMD module with relative dependencies', function() {
+        //           expect(1);
+        //           stop(2000);
+        //
+        //           using('amd/modrel', function(a) {
+        //             equals(a.modb, 'AMD success', 'loaded mod with relative dependencies');
+        //             start();
+        //           });
+        //         });
+        //
+        //         QUnit.test('should be able to use require and exports in AMD module', function() {
+        //           expect(1);
+        //           stop(2000);
+        //
+        //           var mod = define(['require', 'exports', 'modb'], function(require, exports) {
+        //             var modb = require('modb');
+        //
+        //             exports.modb = modb.test();
+        //           });
+        //
+        //           mod.then(function(e) {
+        //             equals(e.modb, 'success');
+        //             start();
+        //           });
+        //         });
 
-            using('amd/modlit', function(a) {
-              equals(a.test, 'success', 'loaded mod defined object literal');
-              start();
-            });
+        QUnit.module('LoadBuilder test');
+        QUnit.test('should be able to provide module and use it, inline', function() {
+          expect(1);
+          stop(2000);
+
+          provide('a/b', function(exports) {
+            exports(true);
           });
 
+          using('a/b', function(ab) {
+            ok(ab);
+            start();
+          });
+        });
 
-          QUnit.test('should load an AMD module defined with a function', function() {
-            expect(1);
-            stop(2000);
+        QUnit.test('should be able load several named modules in a single file', function() {
+          expect(1);
+          stop(2000);
 
-            using('amd/modnodep', function(a) {
-              equals(a.test, 'success', 'loaded mod defined with function');
-              start();
-            });
+          using('modcompiled', function(ab) {
+            equals(ab, 'thinganother');
+            start();
+          });
+        });
+
+        QUnit.test('should put individual args after obj when using .as()', function() {
+          expect(2);
+          stop(2000);
+
+
+          using('moda', 'modb').as(function(all, moda, modb) {
+            ok(all.moda == moda);
+            ok(all.modb == modb);
+            start();
+          });
+        });
+
+        QUnit.test('should be able load modules from a bundle', function() {
+          expect(2);
+          stop(2000);
+          loadrunner.Script.loaded = [];
+          using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
+          using('thing', 'another', function(a, b) {
+            equals(a, 'thing');
+            equals(b, 'another');
+            start();
+          });
+        });
+
+
+        QUnit.module('Autofetch tests', {
+          teardown: function() {
+            loadrunner.reset();
+            loadrunner.Script.autoFetch = true;
+          }
+        });
+
+        QUnit.test('should be able to defer start of dep using autoFetch = false', function() {
+          expect(1);
+          stop(2000);
+          loadrunner.Script.autoFetch = false;
+          var startCalled = false;
+
+          using('defered', function(a) {
+            if (startCalled) {
+              ok(a === 'loaded now', 'only loaded after start');
+            } else {
+              ok(false, 'loaded without start being called');
+            }
+
+            start();
           });
 
-          QUnit.test('should load an AMD module with dependencies', function() {
-            expect(1);
-            stop(2000);
+          setTimeout(function() {
+            startCalled = true;
+            using('defered').forceFetch();
+          }, 100);
+        });
 
-            using('amd/moda', function(a) {
-              equals(a.moda, 'success', 'loaded mod with dependencies');
-              start();
-            });
-          });
+        QUnit.test('should be able to defer start of dep, with a callback', function() {
+          expect(1);
+          stop(2000);
+          loadrunner.Script.autoFetch = false;
 
-          QUnit.test('should load an AMD module with relative dependencies', function() {
-            expect(1);
-            stop(2000);
+          setTimeout(function() {
 
-            using('amd/modrel', function(a) {
-              equals(a.modb, 'AMD success', 'loaded mod with relative dependencies');
-              start();
-            });
-          });
-
-          QUnit.test('should be able to use require and exports in AMD module', function() {
-            expect(1);
-            stop(2000);
-
-            var mod = define(['require', 'exports', 'modb'], function(require, exports) {
-              var modb = require('modb');
-
-              exports.modb = modb.test();
-            });
-
-            mod.then(function(e) {
-              equals(e.modb, 'success');
-              start();
-            });
-          });
-
-          QUnit.module('LoadBuilder test');
-          QUnit.test('should be able to provide module and use it, inline', function() {
-            expect(1);
-            stop(2000);
-
-            provide('a/b', function(exports) {
-              exports(true);
-            });
-
-            using('a/b', function(ab) {
-              ok(ab);
-              start();
-            });
-          });
-
-          QUnit.test('should be able load several named modules in a single file', function() {
-            expect(1);
-            stop(2000);
-
-            using('modcompiled', function(ab) {
-              equals(ab, 'thinganother');
-              start();
-            });
-          });
-
-          QUnit.test('should put individual args after obj when using .as()', function() {
-            expect(2);
-            stop(2000);
-
-
-            using('moda', 'modb').as(function(all, moda, modb) {
-              ok(all.moda == moda);
-              ok(all.modb == modb);
-              start();
-            });
-          });
-
-          QUnit.test('should be able load modules from a bundle', function() {
-            expect(2);
-            stop(2000);
-            loadrunner.Script.loaded = [];
-            using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
-            using('thing', 'another', function(a, b) {
-              equals(a, 'thing');
-              equals(b, 'another');
-              start();
-            });
-          });
-
-
-
-          QUnit.test('should be able to defer start of dep using autoLoad = false', function() {
-            // FIGURE OUT A WAY TO TEST THIS.  GOING TO BE HARD AS ITS A GLOBAL FLAG
-            //
-            expect(1);
-            stop(2000);
-            using.autoLoad = false;
-            var startCalled = false;
-
-            using('defered', function(a) {
-              if (startCalled) {
-                ok(a === 'loaded now', 'only loaded after start');
-              } else {
-                ok(false, 'loaded without start being called');
-              }
+            using('defered2', function() {
+              ok(true, "callback fired");
 
               start();
-            });
+            }).forceFetch();
 
-            setTimeout(function() {
-              startCalled = true;
-              using(['defered']).load();
-            }, 100);
+          }, 100);
+        });
+
+        QUnit.test('should still run provided modules immediately, despite autoFetch = false', function() {
+          expect(1);
+          stop(2000);
+          loadrunner.Script.autoFetch = false;
+
+          provide('laterz', function(exports) {
+            exports('loaded now');
           });
+          using('laterz', function(a) {
+            ok(a === 'loaded now', 'failed to use provided module');
+
+            start();
+          });
+
+        });
+
+        QUnit.test('should be able to detect unprovided modules using debug', function() {
+          expect(1);
+          loadrunner.Script.autoFetch = false;
+
+          using('neverheardofuz', function(a) {
+          });
+          ok(loadrunner.debug().paused['module_neverheardofuz'], 'Paused dependency found');
+        });
+
+        QUnit.module('Depth test');
+        QUnit.test('should cope with a deep Sequence', function() {
+         expect(1);
+         stop(5000);
+
+         using('deep', function(deep) {
+           equals('success', deep, 'module exports loaded');
+           start();
+         });
+        });
+        QUnit.test('should cope with many identical module loads', function() {
+         expect(1);
+         stop(5000);
+
+         using('many', function(many) {
+           equals('success', many, 'module exports loaded');
+           start();
+         });
+        });
+
+        QUnit.module('Case test', {
+          setup:function() {
+            this.conlog = console.log;
+          },
+          teardown:function() {
+            console.log = this.conlog;
+          }
+        });
+
+        // QUnit.test('should warn about case sensitivity', function() {
+        //   expect(2);
+        //   stop(5000);
+        //   console.log = function(msg) {
+        //     ok(true, msg);
+        //   }
+        //
+        //   using('moda', 'ModA', function(moda) {
+        //     equals('success', moda.test, 'module exports loaded');
+        //     start();
+        //   });
+        // });
 
      }
     </script>
@@ -466,6 +503,7 @@
           a.onreadystatechange = function () {
             if (indexOf(['loaded', 'complete'], this.readyState) > -1) {
               this.onreadystatechange = null;
+              this.onload = null;
               runTests();
             }
           };

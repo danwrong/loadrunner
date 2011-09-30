@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>module.js test</title>
+    <link rel="stylesheet" href="../vendor/qunit/qunit.css" type="text/css" charset="utf-8">
+    <script src="../vendor/qunit/qunit.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../src/loadrunner.js" type="text/javascript" data-path="modules" charset="utf-8"></script>
+    <script src="../src/defer.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1 id="qunit-header">module.js deferred() test</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+
+    <script type="text/javascript" charset="utf-8">
+
+      module('loading scripts with deferred');
+
+      test('should be able to load deferred scripts and them not execute', function() {
+        stop(2000);
+        expect(2);
+        
+        using('javascripts/deferred_scripts.js', function() {
+          ok(!window.loadedThing);
+          ok(!window.loadedAnother);
+          start();
+        });
+      });
+        
+      test('should be able to load deferred scripts and then execute when required', function() {
+        stop(2000);
+        expect(3);
+      
+        using('javascripts/deferred_scripts.js', function() {
+          using('thing.js', function() {
+            ok(window.loadedThing);
+            ok(!window.loadedAnother);
+          
+            using('another.js', function() {
+              ok(window.loadedAnother);
+              start();
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
