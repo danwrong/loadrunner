@@ -94,11 +94,6 @@
           dep.complete.apply(dep, arguments);
         });
     } else {
-      for (var depId in aug({}, metDependencies, inProgressDependencies, pausedDependencies)) {
-        if (depId.toLowerCase()==this.key().toLowerCase() && depId!=this.key()) {
-          console && console.log('Warning: attempting to load two modules with similar names:', depId, this.key());
-        }
-      }
       if (this.shouldFetch()) {
         inProgressDependencies[this.key()] = this;
         this.fetch();

@@ -462,18 +462,19 @@
             console.log = this.conlog;
           }
         });
-        QUnit.test('should warn about case sensitivity', function() {
-          expect(2);
-          stop(5000);
-          console.log = function(msg) {
-            ok(true, msg);
-          }
 
-          using('moda', 'ModA', function(moda) {
-            equals('success', moda.test, 'module exports loaded');
-            start();
-          });
-        });
+        // QUnit.test('should warn about case sensitivity', function() {
+        //   expect(2);
+        //   stop(5000);
+        //   console.log = function(msg) {
+        //     ok(true, msg);
+        //   }
+        //
+        //   using('moda', 'ModA', function(moda) {
+        //     equals('success', moda.test, 'module exports loaded');
+        //     start();
+        //   });
+        // });
 
      }
     </script>
