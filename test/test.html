@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <title>module.js test</title>
+    <title>loadrunner test</title>
     <link rel="stylesheet" href="../vendor/qunit/qunit.css" type="text/css" charset="utf-8">
     <script src="../vendor/qunit/qunit.js" type="text/javascript" charset="utf-8"></script>
   </head>
@@ -255,66 +255,8 @@
          });
        });
 
-        // QUnit.module('AMD support');
-        //
-        //         QUnit.test('should load an AMD module defined with an object literal', function() {
-        //           expect(1);
-        //           stop(2000);
-        //
-        //           using('amd/modlit', function(a) {
-        //             equals(a.test, 'success', 'loaded mod defined object literal');
-        //             start();
-        //           });
-        //         });
-        //
-        //
-        //         QUnit.test('should load an AMD module defined with a function', function() {
-        //           expect(1);
-        //           stop(2000);
-        //
-        //           using('amd/modnodep', function(a) {
-        //             equals(a.test, 'success', 'loaded mod defined with function');
-        //             start();
-        //           });
-        //         });
-        //
-        //         QUnit.test('should load an AMD module with dependencies', function() {
-        //           expect(1);
-        //           stop(2000);
-        //
-        //           using('amd/moda', function(a) {
-        //             equals(a.moda, 'success', 'loaded mod with dependencies');
-        //             start();
-        //           });
-        //         });
-        //
-        //         QUnit.test('should load an AMD module with relative dependencies', function() {
-        //           expect(1);
-        //           stop(2000);
-        //
-        //           using('amd/modrel', function(a) {
-        //             equals(a.modb, 'AMD success', 'loaded mod with relative dependencies');
-        //             start();
-        //           });
-        //         });
-        //
-        //         QUnit.test('should be able to use require and exports in AMD module', function() {
-        //           expect(1);
-        //           stop(2000);
-        //
-        //           var mod = define(['require', 'exports', 'modb'], function(require, exports) {
-        //             var modb = require('modb');
-        //
-        //             exports.modb = modb.test();
-        //           });
-        //
-        //           mod.then(function(e) {
-        //             equals(e.modb, 'success');
-        //             start();
-        //           });
-        //         });
-
         QUnit.module('LoadBuilder test');
+
         QUnit.test('should be able to provide module and use it, inline', function() {
           expect(1);
           stop(2000);

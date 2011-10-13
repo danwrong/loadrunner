@@ -222,6 +222,7 @@
       currentProvide = null;
 
       if (p) {
+        p.setId(this.id);
         p.then(function(exports) {
           me.complete.call(me, exports);
         });
@@ -234,7 +235,6 @@
   function Definition(id, body) {
     var module;
 
-    this.id = id;
     this.body = body;
 
     if (!id) {
@@ -243,6 +243,7 @@
 
 
         if (module) {
+          this.setId(module.id);
           delete activeScripts[module.scriptId];
 
           this.then(function(exports) {
@@ -253,7 +254,7 @@
         currentProvide = this;
       }
     } else {
-      Definition.provided[this.id] = this;
+      this.setId(id);
 
       if (module = inProgressDependencies['module_' + this.id]) {
        this.then(function(exports) {
@@ -268,6 +269,10 @@
     if (!this.id) this.id = "anon_" + uuid++;
     return 'definition_' + this.id;
   };
+  Definition.prototype.setId = function(id) {
+    this.id = id;
+    Definition.provided[id] = this;
+  }
   Definition.prototype.fetch = function() {
     var me = this;
 
