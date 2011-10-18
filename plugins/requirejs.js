@@ -79,31 +79,6 @@ define("%id%", %deps%, function(require, exports) {\n\
     .replace('%deps%', depsJsList);
   }
 
-  RequirejsDependency.prototype.httpGet = function(url, callback) {
-    /**
-     *  A simple wrapper for XmlHttpRequest. Passes the response from the requested URL
-     *  to the callback.
-     */
-    var xhr;
-    if(window.XMLHttpRequest) {
-      xhr = new window.XMLHttpRequest();
-    } else {
-      try {
-        xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-      } catch(e) {
-        //  Eep
-        return new Error('XHR not found.');
-      }
-    }
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == 4) {
-        callback(xhr.responseText);
-      }
-    };
-    xhr.open('GET', url, true);
-    xhr.send(null);
-  }
-
   using.matchers.add(/^requirejs!/, function(path) {
     return new RequirejsDependency(path.substring(10));
   });

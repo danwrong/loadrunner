@@ -1,1 +1,0 @@
-This is obviously not valid JavaScript.
