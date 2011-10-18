@@ -24,8 +24,9 @@ loadrunner(function(using, provide, loadrunner) {
 
     this.path = loadrunner.Module.prototype.resolvePath(id);
     this.id = id;
+    this.transport = this.TRANSPORT_XHR;
   };
-  RequirejsDependency.prototype = new loadrunner.Dependency;
+  RequirejsDependency.prototype = new loadrunner.Script;
   RequirejsDependency.prototype.key = function() {
     return 'requirejs_' + this.id;
   };
@@ -38,16 +39,11 @@ loadrunner(function(using, provide, loadrunner) {
     return '["' + array.join('","') + '"]';
   }
 
-  RequirejsDependency.prototype.fetch = function() {
-    /**
-     *  Fetches and executes a requirejs module.
-     */
+  RequirejsDependency.prototype.afterXhrFetch = function(code) {
     var me = this;
-    this.httpGet(this.path, function(code) {
-      var definition = me.generateDefinition(code);
-      eval(definition).then(function(exports) {
-        me.complete(exports);
-      });
+    var definition = this.generateDefinition(code);
+    eval(definition).then(function(exports) {
+      me.complete(exports);
     });
   };
 
