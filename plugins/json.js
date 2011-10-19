@@ -19,32 +19,16 @@ loadrunner(function(using, provide, loadrunner) {
 
   function JSONDependency(id, force) {
     this.path = this.id = id;
+    this.transport = this.TRANSPORT_XHR;
     this.force = !!force;
   };
   JSONDependency.prototype = new loadrunner.Script;
   JSONDependency.prototype.key = function() {
     return 'json_' + this.id;
   };
-  JSONDependency.prototype.fetch = function() {
-    var xhr, me = this;
-    if(window.XMLHttpRequest) {
-      xhr = new window.XMLHttpRequest();
-    } else {
-      try {
-        xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
-      } catch(e) {
-        //  Eep
-        return new Error('XHR not found.');
-      }
-    }
-    xhr.onreadystatechange = function() {
-      if(xhr.readyState == 4) {
-        me.result = xhr.responseText;
-        me.complete(me.result);
-      }
-    };
-    xhr.open('GET', this.path, true);
-    xhr.send(null);
+  JSONDependency.prototype.afterXhrFetch = function(data) {
+    this.result = data;
+    this.complete(this.result);
   };
 
   using.matchers.add(/^json!/, function(path) {

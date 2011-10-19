@@ -143,6 +143,7 @@
     if (path) {
       this.id = this.path = this.resolvePath(path);
     }
+    this.transport = this.TRANSPORT_SCRIPT_TAG;
     this.force = !!force;
   }
   Script.autoFetch = true;
@@ -156,35 +157,73 @@
   Script.prototype.shouldFetch = function() {
     return Script.autoFetch || this.force;
   };
-  Script.prototype.fetch = function() {
-    var me = this;
-
-    var script = scriptTemplate.cloneNode(false);
-
-    this.scriptId = script.id = 'LR' + ++uuid;
-    script.type = 'text/javascript';
-    script.async = true;
-
-    script.onerror = function() {
-      throw new Error(me.path + ' not loaded');
+  Script.prototype.TRANSPORT_SCRIPT_TAG = 'script';
+  Script.prototype.TRANSPORT_XHR = 'xhr';
+  Script.prototype.httpGet = function(url, callback) {
+    /**
+     *  A simple wrapper for XmlHttpRequest. Passes the response from the requested URL
+     *  to the callback.
+     */
+    var xhr;
+    if(window.XMLHttpRequest) {
+      xhr = new window.XMLHttpRequest();
+    } else {
+      try {
+        xhr = new window.ActiveXObject("Microsoft.XMLHTTP");
+      } catch(e) {
+        //  Eep
+        return new Error('XHR not found.');
+      }
     }
-
-    script.onreadystatechange = script.onload = function (e) {
-      e = context.event || e;
-
-      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
-        this.onreadystatechange = null;
-        me.loaded();
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == 4) {
+        callback(xhr.responseText);
       }
     };
+    xhr.open('GET', url, true);
+    xhr.send(null);
+  };
+  Script.prototype.afterXhrFetch = function(response) {
+    eval(response);
+    this.loaded();
+  };
+  Script.prototype.fetch = function() {
+    var me = this;
+    this.scriptId = 'LR' + ++uuid;
 
-    script.src = this.path;
+    if(this.transport == this.TRANSPORT_XHR) {
+      console.log('xhr!');
+      this.httpGet(this.path, function(response) {
+        me.afterXhrFetch(response);
+      });
+    } else {
+      var script = scriptTemplate.cloneNode(false);
 
-    currentScript = this;
-    scripts[0].parentNode.insertBefore(script, scripts[0]);
-    currentScript = null;
+      script.id = this.scriptId;
+      script.type = 'text/javascript';
+      script.async = true;
 
-    activeScripts[script.id] = this;
+      script.onerror = function() {
+        throw new Error(me.path + ' not loaded');
+      }
+
+      script.onreadystatechange = script.onload = function (e) {
+        e = context.event || e;
+
+        if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
+          this.onreadystatechange = null;
+          me.loaded();
+        }
+      };
+
+      script.src = this.path;
+
+      currentScript = this;
+      scripts[0].parentNode.insertBefore(script, scripts[0]);
+      currentScript = null;
+    }
+
+    activeScripts[this.scriptId] = this;
   };
 
   Script.prototype.loaded = function() {

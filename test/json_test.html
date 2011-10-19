@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>json plugin test</title>
+    <link rel="stylesheet" href="../vendor/qunit/qunit.css" type="text/css" charset="utf-8">
+    <script src="../vendor/qunit/qunit.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../src/loadrunner.js" type="text/javascript" data-path="modules" charset="utf-8"></script>
+    <script src="../plugins/json.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1 id="qunit-header">json test</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+
+    <script type="text/javascript" charset="utf-8">
+
+      module('loading json');
+
+      test('should be able to load json', function() {
+        stop(2000);
+        expect(2);
+        using('json!data.json', function(rawData) {
+          ok(!!rawData, 'Raw data is passed in');
+
+          var actualObject = JSON.parse(rawData);
+          ok(actualObject.success, 'Successfully decoded JSON');
+          start();
+        });
+      });
+    </script>
+  </body>
+</html>
