@@ -1,9 +1,9 @@
 all: clean main
 
-dist/plugins/%.js: plugins/%.js
+dist/plugins/%.js: plugins/*.js
 	`npm bin`/uglifyjs -o $@ $<
 
-dist/%.js: src/%.js
+dist/%.js: src/*.js
 	`npm bin`/uglifyjs -o $@ $<
 
 dist:
@@ -17,7 +17,6 @@ main: dist js
 plugins: dist/plugins $(wildcard plugins/*.js)
 
 js: $(wildcard src/*.js)
-
 
 clean:
 	rm -rf dist

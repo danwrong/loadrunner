@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+var static = require('node-static');
+
+var file = new(static.Server)(__dirname + '/../../');
+
+console.log('Starting test server on http://localhost:8080/');
+
+require('http').createServer(function (request, response) {
+  
+    request.addListener('end', function () {
+        file.serve(request, response);
+    });
+    
+}).listen(8080);

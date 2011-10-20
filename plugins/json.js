@@ -17,22 +17,23 @@
 */
 loadrunner(function(using, provide, loadrunner) {
 
-  function JSONDependency(id, force) {
+  function JSONRequest(id, force) {
     this.path = this.id = id;
-    this.transport = this.TRANSPORT_XHR;
     this.force = !!force;
   };
-  JSONDependency.prototype = new loadrunner.Script;
-  JSONDependency.prototype.key = function() {
+  JSONRequest.prototype = new loadrunner.Script;
+  JSONRequest.prototype.key = function() {
     return 'json_' + this.id;
   };
-  JSONDependency.prototype.afterXhrFetch = function(data) {
-    this.result = data;
-    this.complete(this.result);
+  JSONRequest.prototype.fetch = loadrunner.Script.xhrTransport;
+  JSONRequest.prototype.loaded = function(data) {
+    // TODO we should parse the JSON here otherwise this isn't a JSON plugin
+    // its just an XHR plugin
+    this.complete(data);
   };
 
   using.matchers.add(/^json!/, function(path) {
-    return new JSONDependency(path.substring(5));
+    return new JSONRequest(path.substring(5));
   });
 
 });

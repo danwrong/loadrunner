@@ -23,7 +23,6 @@
       var from = mod.id || '';
       var parts = from.split('/'); parts.pop();
       var dir = parts.join('/');
-      console.log('resolve', id.replace(/^\./, dir));
       return id.replace(/^\./, dir);
     }
 

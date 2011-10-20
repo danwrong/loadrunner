@@ -10,7 +10,7 @@
     <script src="../plugins/amd.js" type="text/javascript" charset="utf-8"></script>
   </head>
   <body>
-    <h1 id="qunit-header">module.js deferred() test</h1>
+    <h1 id="qunit-header">requirejs plugin test</h1>
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
     <ol id="qunit-tests"></ol>
@@ -24,7 +24,6 @@
         expect(2);
         using('requirejs!requirejs/modtrivial', function(actualObject) {
           ok(!!actualObject, 'Our dependency is passed in');
-          console.log(actualObject);
           ok(actualObject.test, 'Our dependency was successful');
           start();
         });
@@ -45,11 +44,13 @@
         stop(1000);
         expect(1);
         var usingStatementDidRun = false;
+        
         console.error("Don't worry, we expect to see a SyntaxError right here:");
         using('requirejs!requirejs/moderror', function() {
           ok(false, 'This should never execute');
           usingStatementDidRun = true;
         });
+        
         setTimeout(function() {
           ok(!usingStatementDidRun, 'Using statement should never execute');
           start();

@@ -143,28 +143,16 @@
     if (path) {
       this.id = this.path = this.resolvePath(path);
     }
-    this.transport = this.TRANSPORT_SCRIPT_TAG;
+    
     this.force = !!force;
   }
   Script.autoFetch = true;
-  Script.prototype = new Dependency;
-  Script.prototype.resolvePath = function(path) {
-    return (whichBundle(path) != path) ? whichBundle(path) : path;
-  }
-  Script.prototype.key = function() {
-    return "script_" + this.id;
-  };
-  Script.prototype.shouldFetch = function() {
-    return Script.autoFetch || this.force;
-  };
-  Script.prototype.TRANSPORT_SCRIPT_TAG = 'script';
-  Script.prototype.TRANSPORT_XHR = 'xhr';
-  Script.prototype.httpGet = function(url, callback) {
-    /**
-     *  A simple wrapper for XmlHttpRequest. Passes the response from the requested URL
-     *  to the callback.
-     */
+  
+  Script.xhrTransport = function() {
     var xhr;
+    
+    var me = this;
+    
     if(window.XMLHttpRequest) {
       xhr = new window.XMLHttpRequest();
     } else {
@@ -175,57 +163,60 @@
         return new Error('XHR not found.');
       }
     }
+    
     xhr.onreadystatechange = function() {
+      var result;
+      
       if(xhr.readyState == 4) {
-        callback(xhr.responseText);
+        me.loaded(xhr.responseText);
       }
     };
-    xhr.open('GET', url, true);
+    
+    xhr.open('GET', this.path, true);
     xhr.send(null);
   };
-  Script.prototype.afterXhrFetch = function(response) {
-    eval(response);
-    this.loaded();
-  };
-  Script.prototype.fetch = function() {
-    var me = this;
+  
+  Script.scriptTagTransport = function() {
+    var script = scriptTemplate.cloneNode(false), me = this;
+
     this.scriptId = 'LR' + ++uuid;
+    script.id = this.scriptId;
+    script.type = 'text/javascript';
+    script.async = true;
 
-    if(this.transport == this.TRANSPORT_XHR) {
-      console.log('xhr!');
-      this.httpGet(this.path, function(response) {
-        me.afterXhrFetch(response);
-      });
-    } else {
-      var script = scriptTemplate.cloneNode(false);
-
-      script.id = this.scriptId;
-      script.type = 'text/javascript';
-      script.async = true;
-
-      script.onerror = function() {
-        throw new Error(me.path + ' not loaded');
-      }
-
-      script.onreadystatechange = script.onload = function (e) {
-        e = context.event || e;
-
-        if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
-          this.onreadystatechange = null;
-          me.loaded();
-        }
-      };
-
-      script.src = this.path;
-
-      currentScript = this;
-      scripts[0].parentNode.insertBefore(script, scripts[0]);
-      currentScript = null;
+    script.onerror = function() {
+      throw new Error(me.path + ' not loaded');
     }
 
-    activeScripts[this.scriptId] = this;
-  };
+    script.onreadystatechange = script.onload = function (e) {
+      e = context.event || e;
 
+      if (e.type == 'load' || indexOf(['loaded', 'complete'], this.readyState) > -1) {
+        this.onreadystatechange = null;
+        me.loaded();
+      }
+    };
+
+    script.src = this.path;
+
+    currentScript = this;
+    scripts[0].parentNode.insertBefore(script, scripts[0]);
+    currentScript = null;
+    
+    activeScripts[this.scriptId] = this;
+  }
+  
+  Script.prototype = new Dependency;
+  Script.prototype.resolvePath = function(path) {
+    return (whichBundle(path) != path) ? whichBundle(path) : path;
+  }
+  Script.prototype.key = function() {
+    return "script_" + this.id;
+  };
+  Script.prototype.shouldFetch = function() {
+    return Script.autoFetch || this.force;
+  };
+  Script.prototype.fetch = Script.scriptTagTransport;
   Script.prototype.loaded = function() {
     this.complete();
   }
