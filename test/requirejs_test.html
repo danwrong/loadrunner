@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>requirejs plugin test</title>
+    <link rel="stylesheet" href="../vendor/qunit/qunit.css" type="text/css" charset="utf-8">
+    <script src="../vendor/qunit/qunit.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../src/loadrunner.js" type="text/javascript" data-path="modules" charset="utf-8"></script>
+    <script src="../plugins/requirejs.js" type="text/javascript" charset="utf-8"></script>
+    <script src="../plugins/amd.js" type="text/javascript" charset="utf-8"></script>
+  </head>
+  <body>
+    <h1 id="qunit-header">module.js deferred() test</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+
+    <script type="text/javascript" charset="utf-8">
+
+      module('loading scripts with requirejs');
+
+      test('should be able to load naked scripts', function() {
+        stop(2000);
+        expect(2);
+        using('requirejs!requirejs/modtrivial', function(actualObject) {
+          ok(!!actualObject, 'Our dependency is passed in');
+          console.log(actualObject);
+          ok(actualObject.test, 'Our dependency was successful');
+          start();
+        });
+      });
+
+      test('should be able to load scripts with dependencies', function() {
+        stop(2000);
+        expect(3);
+        using('requirejs!requirejs/moddep', function(actualObject) {
+          ok(!!actualObject, 'Our dependency is passed in');
+          ok(!!actualObject.moda, 'Our dependency passed in the result from moda');
+          same(actualObject.moda.test, 'success', 'Our dependency was successful');
+          start();
+        });
+      });
+
+      test("should throw an error if there's a syntax error in the script", function() {
+        stop(1000);
+        expect(1);
+        var usingStatementDidRun = false;
+        console.error("Don't worry, we expect to see a SyntaxError right here:");
+        using('requirejs!requirejs/moderror', function() {
+          ok(false, 'This should never execute');
+          usingStatementDidRun = true;
+        });
+        setTimeout(function() {
+          ok(!usingStatementDidRun, 'Using statement should never execute');
+          start();
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
