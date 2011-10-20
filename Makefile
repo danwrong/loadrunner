@@ -1,9 +1,9 @@
 all: clean main
 
-dist/plugins/%.js: plugins/*.js
+dist/plugins/%.js: plugins/%.js
 	`npm bin`/uglifyjs -o $@ $<
 
-dist/%.js: src/*.js
+dist/%.js: src/%.js
 	`npm bin`/uglifyjs -o $@ $<
 
 dist:
@@ -12,11 +12,14 @@ dist:
 dist/plugins: dist
 	mkdir -p dist/plugins
 
-main: dist js
+main: dist js plugins
 
-plugins: dist/plugins $(wildcard plugins/*.js)
+plugins: dist/plugins/amd.js dist/plugins/defer.js dist/plugins/json.js dist/plugins/requirejs.js
 
-js: $(wildcard src/*.js)
+js: dist/loadrunner.js
 
 clean:
 	rm -rf dist
+
+test: .
+	./test/bin/server; open "http://localhost:8080/test/index.html"
