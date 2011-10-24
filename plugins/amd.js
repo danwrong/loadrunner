@@ -30,7 +30,7 @@
       var mapped = [];
 
       function require(id) {
-        return loadrunner.Module.exports[resolve(id, mod)];
+        return loadrunner.Module.exports[resolve(id.replace(/^.+!/, ''), mod)];
       }
 
       for (var i=0, len = args.length; i < len; i++) {

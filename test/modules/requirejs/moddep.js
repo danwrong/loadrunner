@@ -1,1 +1,1 @@
-exports.moda = require('moda');
+exports.moda = require('lr!moda');

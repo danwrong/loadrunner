@@ -2,14 +2,15 @@
 
 var static = require('node-static');
 
-var file = new(static.Server)(__dirname + '/../../');
+var file = new(static.Server)(__dirname + '/../');
 
-console.log('Starting test server on http://localhost:8080/');
+console.log('Starting test server');
+console.log('Open http://localhost:8080/test/index.html in a browser.');
 
 require('http').createServer(function (request, response) {
-  
+
     request.addListener('end', function () {
         file.serve(request, response);
     });
-    
+
 }).listen(8080);

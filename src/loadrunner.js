@@ -143,16 +143,16 @@
     if (path) {
       this.id = this.path = this.resolvePath(path);
     }
-    
+
     this.force = !!force;
   }
   Script.autoFetch = true;
-  
+
   Script.xhrTransport = function() {
     var xhr;
-    
+
     var me = this;
-    
+
     if(window.XMLHttpRequest) {
       xhr = new window.XMLHttpRequest();
     } else {
@@ -163,19 +163,19 @@
         return new Error('XHR not found.');
       }
     }
-    
+
     xhr.onreadystatechange = function() {
       var result;
-      
+
       if(xhr.readyState == 4) {
         me.loaded(xhr.responseText);
       }
     };
-    
+
     xhr.open('GET', this.path, true);
     xhr.send(null);
   };
-  
+
   Script.scriptTagTransport = function() {
     var script = scriptTemplate.cloneNode(false), me = this;
 
@@ -202,10 +202,10 @@
     currentScript = this;
     scripts[0].parentNode.insertBefore(script, scripts[0]);
     currentScript = null;
-    
+
     activeScripts[this.scriptId] = this;
   }
-  
+
   Script.prototype = new Dependency;
   Script.prototype.resolvePath = function(path) {
     return (whichBundle(path) != path) ? whichBundle(path) : path;
@@ -586,8 +586,8 @@
     return script;
   });
 
-  using.matchers.add(/^[a-zA-Z0-9_\-\/]+$/, function(id) {
-    var mod = new Module(id.replace(/!$/, ''));
+  using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/]+$/, function(id) {
+    var mod = new Module(id.replace(/^lr!/, '').replace(/!$/, ''));
     return mod;
   });
 
