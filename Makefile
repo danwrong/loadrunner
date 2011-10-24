@@ -21,5 +21,8 @@ js: dist/loadrunner.js
 clean:
 	rm -rf dist
 
+testserver: .
+	./test/bin/server
+
 test: .
-	./test/bin/server; open "http://localhost:8080/test/index.html"
+	open 'http://localhost:8080/test/index.html'

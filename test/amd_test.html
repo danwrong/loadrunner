@@ -73,6 +73,20 @@
         start();
       });
     });
+
+    QUnit.test('should be able to use export via module.exports', function() {
+      expect(1);
+      stop(2000);
+
+      var module = define(['require', 'exports'], function(require, exports) {
+        module.exports = "BOOYAH!";
+      });
+
+      module.then(function(e) {
+        equals(e, 'BOOYAH!');
+        start();
+      });
+    });
     </script>
   </body>
 </html>
