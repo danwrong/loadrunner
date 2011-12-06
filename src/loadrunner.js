@@ -1,6 +1,6 @@
 (function(context, document) {
   var useInteractive = context.attachEvent && !context.opera,
-      scripts = document.getElementsByTagName('script'), uuid = 0,
+      scripts = document.getElementsByTagName('script'),
       scriptTag, scriptTemplate = document.createElement('script'),
       currentProvide, currentScript, activeScripts = {}, oldUsing = context.using,
       oldProvide = context.provide, oldLoadrunner = context.loadrunner;
@@ -13,6 +13,14 @@
       break;
     }
   }
+
+  var uuid = (function () {
+    var _uuid = 0;
+
+    return function () {
+      return _uuid++;
+    };
+  })();
 
   function aug(target) {
     for (var i = 1, o; o = arguments[i]; i++) {
@@ -77,7 +85,7 @@
   };
   Dependency.prototype.key = function() {
     if (!this.id) {
-      this.id = uuid++;
+      this.id = uuid();
     }
 
     return 'dependency_' + this.id;
@@ -179,7 +187,7 @@
   Script.scriptTagTransport = function() {
     var script = scriptTemplate.cloneNode(false), me = this;
 
-    this.scriptId = 'LR' + ++uuid;
+    this.scriptId = 'LR' + uuid();
     script.id = this.scriptId;
     script.type = 'text/javascript';
     script.async = true;
@@ -296,7 +304,7 @@
   Definition.provided = {};
   Definition.prototype = new Dependency;
   Definition.prototype.key = function() {
-    if (!this.id) this.id = "anon_" + uuid++;
+    if (!this.id) this.id = "anon_" + uuid();
     return 'definition_' + this.id;
   };
   Definition.prototype.setId = function(id) {
