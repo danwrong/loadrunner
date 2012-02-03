@@ -594,7 +594,7 @@
     return script;
   });
 
-  using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/]+$/, function(id) {
+  using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/\.]+$/, function(id) {
     var mod = new Module(id.replace(/^lr!/, '').replace(/!$/, ''));
     return mod;
   });
