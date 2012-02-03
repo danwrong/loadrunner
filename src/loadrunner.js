@@ -251,7 +251,7 @@
     return 'module_' + this.id;
   }
   Module.prototype.resolvePath = function(id) {
-    return (whichBundle(id) != id) ? whichBundle(id) : path(using.path, id + '.js');
+    return path(using.path, (whichBundle(id) != id) ? whichBundle(id) : id + '.js');
   }
   Module.prototype.loaded = function() {
     var p, exports, me = this;
