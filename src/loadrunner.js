@@ -428,6 +428,21 @@
   }
   Sequence.prototype.forceFetch = forceFetch;
 
+  function Manifest() {
+    this.entries = {};
+  }
+  Manifest.prototype.push = function(bundle) {
+    for (var file in bundle) {
+      for (var i=0, alias; alias = bundle[file][i]; i++) {
+        this.entries[alias] = file;
+      }
+    }
+  }
+  Manifest.prototype.get = function(key) {
+    return this.entries[key];
+  }
+
+
   function interactiveScript() {
     for (var i in scripts) {
       if (scripts[i].readyState == 'interactive') {
@@ -549,7 +564,7 @@
     pausedDependencies = {};
     metDependencies = {};
     inProgressDependencies = {};
-    using.bundles = [];
+    using.bundles = new Manifest;
     Module.exports = {};
     Definition.provided = {};
   }
@@ -570,18 +585,13 @@
 
   using.path = '';
 
-  using.bundles = [];
+  using.bundles = new Manifest();
 
   // Append your bundle manifests to this array
   // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
   // Loadbuilder can generate your bundles and manifests
   function whichBundle(id) {
-    for (var manifestId=0; manifestId < using.bundles.length; manifestId++) {
-      for (var bundleId in using.bundles[manifestId]) {
-        if (bundleId!=id && indexOf(using.bundles[manifestId][bundleId], id) > -1) return bundleId;
-      }
-    }
-    return id;
+    return using.bundles.get(id) || id;
   }
 
   using.matchers = [];
