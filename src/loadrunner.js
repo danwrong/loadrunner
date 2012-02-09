@@ -215,8 +215,13 @@
   }
 
   Script.prototype = new Dependency;
-  Script.prototype.resolvePath = function(path) {
-    return (whichBundle(path) != path) ? whichBundle(path) : path;
+  Script.prototype.resolvePath = function(filePath) {
+    if (whichBundle(filePath) == filePath) {
+      filePath = filePath.replace(/^\$/, using.path.replace(/\/$/, '') + '/')
+    } else {
+      filePath = path(using.path, whichBundle(filePath));
+    }
+    return filePath;
   }
   Script.prototype.key = function() {
     return "script_" + this.id;
@@ -600,12 +605,12 @@
   }
 
   using.matchers.add(/(^script!|\.js$)/, function(path) {
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''));
+    var script = new Script(path.replace(/^script!/, ''));
     return script;
   });
 
   using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/]+$/, function(id) {
-    var mod = new Module(id.replace(/^lr!/, '').replace(/!$/, ''));
+    var mod = new Module(id.replace(/^lr!/, ''));
     return mod;
   });
 
