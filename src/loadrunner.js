@@ -156,6 +156,17 @@
   }
   Script.autoFetch = true;
 
+  Script.prototype.start = function() {
+    var me = this, bundle;
+    if (bundle = findBundle(this.id)) {
+      bundle.then(function() {
+        me.start();
+      });
+    } else {
+      Dependency.prototype.start.call(this);
+    }
+  };
+
   Script.xhrTransport = function() {
     var xhr;
 
@@ -216,11 +227,7 @@
 
   Script.prototype = new Dependency;
   Script.prototype.resolvePath = function(filePath) {
-    if (whichBundle(filePath) == filePath) {
-      filePath = filePath.replace(/^\$/, using.path.replace(/\/$/, '') + '/')
-    } else {
-      filePath = path(using.path, whichBundle(filePath));
-    }
+    filePath = filePath.replace(/^\$/, using.path.replace(/\/$/, '') + '/');
     return filePath;
   }
   Script.prototype.key = function() {
@@ -242,11 +249,15 @@
   Module.exports = {};
   Module.prototype = new Script;
   Module.prototype.start = function() {
-    var me = this, def;
+    var me = this, def, bundle;
 
     if (def = Definition.provided[this.id]) {
       def.then(function(exports) {
         me.complete.call(me, exports);
+      });
+    } else if (bundle = findBundle(this.id)) {
+      bundle.then(function() {
+        me.start();
       });
     } else {
       Script.prototype.start.call(this);
@@ -254,10 +265,10 @@
   };
   Module.prototype.key = function() {
     return 'module_' + this.id;
-  }
+  };
   Module.prototype.resolvePath = function(id) {
-    return path(using.path, (whichBundle(id) != id) ? whichBundle(id) : id + '.js');
-  }
+    return path(using.path, id + '.js');
+  };
   Module.prototype.loaded = function() {
     var p, exports, me = this;
     if (!useInteractive) {
@@ -273,7 +284,46 @@
         throw new Error("Tried to load '" + this.id +"' as a module, but it didn't have a 'provide()' in it.");
       }
     }
+  };
+  function Bundle(id, contents) {
+    this.id = id;
+    this.contents = contents;
+    if (id.match(/\.js$/)) {
+      this.path = path(using.path, id);
+    } else {
+      this.path = Module.prototype.resolvePath(id);
+    }
   }
+  Bundle.prototype = new Script;
+  Bundle.prototype.start = function() {
+    var me = this, def, file;
+    for (var i=0, l=this.contents.length; i<l; i++) {
+      file = this.contents[i];
+      if (file.match(/\.js$/)) {
+        file = 'script_' + file;
+      } else {
+        file = 'module_' + file;
+      }
+      if (!metDependencies[file] && !inProgressDependencies[file]) {
+        inProgressDependencies[file] = this;
+      }
+    }
+    Script.prototype.start.call(this);
+  };
+  Bundle.prototype.loaded = function() {
+    var p, exports, me = this, file;
+    for (var i=0, l=this.contents.length; i<l; i++) {
+      file = this.contents[i];
+      if (file.match(/\.js$/)) {
+        file = 'script_' + file;
+      } else {
+        file = 'module_' + file;
+      }
+      delete inProgressDependencies[file];
+      metDependencies[file] = this;
+    }
+    Script.prototype.loaded.call(this);
+  };
 
   function Definition(id, body) {
     var module;
@@ -433,13 +483,15 @@
   }
   Sequence.prototype.forceFetch = forceFetch;
 
+  var definedBundles = [];
   function Manifest() {
     this.entries = {};
   }
   Manifest.prototype.push = function(bundle) {
     for (var file in bundle) {
+      definedBundles[file] = new Bundle(file, bundle[file]);
       for (var i=0, alias; alias = bundle[file][i]; i++) {
-        this.entries[alias] = file;
+        this.entries[alias] = definedBundles[file];
       }
     }
   }
@@ -595,8 +647,8 @@
   // Append your bundle manifests to this array
   // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
   // Loadbuilder can generate your bundles and manifests
-  function whichBundle(id) {
-    return using.bundles.get(id) || id;
+  function findBundle(id) {
+    return using.bundles.get(id) || undefined;
   }
 
   using.matchers = [];
