@@ -288,39 +288,32 @@
   function Bundle(id, contents) {
     this.id = id;
     this.contents = contents;
-    if (id.match(/\.js$/)) {
-      this.path = path(using.path, id);
-    } else {
-      this.path = Module.prototype.resolvePath(id);
-    }
+    this.dep = createDependency(id);
+    this.deps = [];
+    this.path = this.dep.path;
   }
   Bundle.prototype = new Script;
   Bundle.prototype.start = function() {
-    var me = this, def, file;
+    var me = this, def, dep, key;
     for (var i=0, l=this.contents.length; i<l; i++) {
-      file = this.contents[i];
-      if (file.match(/\.js$/)) {
-        file = 'script_' + file;
-      } else {
-        file = 'module_' + file;
-      }
-      if (!metDependencies[file] && !inProgressDependencies[file]) {
-        inProgressDependencies[file] = this;
+      dep = createDependency(this.contents[i]);
+      this.deps.push(dep);
+      key = dep.key();
+
+      if (!metDependencies[key] && !inProgressDependencies[key] && !pausedDependencies[key]) {
+        pausedDependencies[key] = this;
       }
     }
     Script.prototype.start.call(this);
   };
   Bundle.prototype.loaded = function() {
-    var p, exports, me = this, file;
-    for (var i=0, l=this.contents.length; i<l; i++) {
-      file = this.contents[i];
-      if (file.match(/\.js$/)) {
-        file = 'script_' + file;
-      } else {
-        file = 'module_' + file;
-      }
-      delete inProgressDependencies[file];
-      metDependencies[file] = this;
+    var p, exports, me = this, dep;
+    for (var i=0, l=this.deps.length; i<l; i++) {
+      dep = this.deps[i];
+      key = dep.key();
+
+      delete pausedDependencies[key];
+      metDependencies[key] = this;
     }
     Script.prototype.loaded.call(this);
   };
