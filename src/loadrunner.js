@@ -307,7 +307,7 @@
     Script.prototype.start.call(this);
   };
   Bundle.prototype.loaded = function() {
-    var p, exports, me = this, dep;
+    var p, exports, me = this, dep, key;
     for (var i=0, l=this.deps.length; i<l; i++) {
       dep = this.deps[i];
       key = dep.key();
