@@ -70,11 +70,10 @@ loadrunner(function(using, provide, loadrunner) {
      *  no boilerplate, accesses all dependencies via require() statements, and returns
      *  its exports by modifying the exports variable.
      */
-    var deps = ['require', 'exports'].concat(this.findDependencies(code)),
+    var deps = ['module', 'require', 'exports'].concat(this.findDependencies(code)),
         depsJsList = this.arrayToString(deps);
 
-    var def = ('(function() { var module = define("%id%", %deps%, ' +
-              'function(require, exports) {\n%code%\n}); return module; }());').
+    var def = ('define("%id%", %deps%, function(module, require, exports) {\n%code%\n});').
               replace('%code%', code).
               replace('%id%', this.id).
               replace('%deps%', depsJsList);

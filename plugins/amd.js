@@ -45,6 +45,11 @@
           continue;
         }
 
+        if (args[i] == 'module') {
+          mapped.push(mod);
+          continue;
+        }
+
         mapped.push(require(args[i]));
       }
       return mapped;
@@ -84,7 +89,7 @@
 
         for (var i=0, len=dependencies.length; i < len; i++) {
           var d = dependencies[i];
-          if (indexOf(['require', 'exports'], d) == -1) {
+          if (indexOf(['require', 'exports', 'module'], d) == -1) {
             mods.push(resolve(d, def));
           }
         }
