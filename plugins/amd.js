@@ -69,19 +69,19 @@
       factory = args.shift();
 
       var def = new loadrunner.Definition(id, function(exports) {
-        var mods = [];
+        var mods = [], thisDef = this;
 
         function executeAMD() {
-          var args = mapArgs(makeArray(dependencies), def), exported;
+          var args = mapArgs(makeArray(dependencies), thisDef), exported;
 
           if (typeof factory == 'function') {
-            exported = factory.apply(def, args);
+            exported = factory.apply(thisDef, args);
           } else {
             exported = factory;
           }
 
           if (typeof exported == 'undefined') {
-            exported = def.exports;
+            exported = thisDef.exports;
           }
 
           exports(exported);
@@ -90,7 +90,7 @@
         for (var i=0, len=dependencies.length; i < len; i++) {
           var d = dependencies[i];
           if (indexOf(['require', 'exports', 'module'], d) == -1) {
-            mods.push(resolve(d, def));
+            mods.push(resolve(d, thisDef));
           }
         }
 
