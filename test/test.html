@@ -305,6 +305,20 @@
           });
         });
 
+        QUnit.test('should only evaluate required modules from a bundle', function() {
+          expect(3);
+          stop(2000);
+          loadrunner.reset();
+          window.thingLoaded = false;
+          equals(false, window.thingLoaded);
+          using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
+          using('another', function(a) {
+            equals(a, 'another');
+            equals(false, window.thingLoaded);
+            start();
+          });
+        });
+
 
         QUnit.module('Autofetch tests', {
           teardown: function() {

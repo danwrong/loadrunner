@@ -154,6 +154,17 @@
   }
   Script.autoFetch = true;
 
+  Script.prototype.start = function() {
+    var me = this, bundle;
+    if (bundle = findBundle(this.id)) {
+      bundle.then(function() {
+        me.start();
+      });
+    } else {
+      Dependency.prototype.start.call(this);
+    }
+  };
+
   Script.xhrTransport = function() {
     var xhr;
 
@@ -213,8 +224,9 @@
   }
 
   Script.prototype = new Dependency;
-  Script.prototype.resolvePath = function(path) {
-    return (whichBundle(path) != path) ? whichBundle(path) : path;
+  Script.prototype.resolvePath = function(filePath) {
+    filePath = filePath.replace(/^\$/, using.path.replace(/\/$/, '') + '/');
+    return filePath;
   }
   Script.prototype.key = function() {
     return "script_" + this.id;
@@ -235,11 +247,15 @@
   Module.exports = {};
   Module.prototype = new Script;
   Module.prototype.start = function() {
-    var me = this, def;
+    var me = this, def, bundle;
 
     if (def = Definition.provided[this.id]) {
       def.then(function(exports) {
         me.complete.call(me, exports);
+      });
+    } else if (bundle = findBundle(this.id)) {
+      bundle.then(function() {
+        me.start();
       });
     } else {
       Script.prototype.start.call(this);
@@ -247,10 +263,10 @@
   };
   Module.prototype.key = function() {
     return 'module_' + this.id;
-  }
+  };
   Module.prototype.resolvePath = function(id) {
-    return path(using.path, (whichBundle(id) != id) ? whichBundle(id) : id + '.js');
-  }
+    return path(using.path, id + '.js');
+  };
   Module.prototype.loaded = function() {
     var p, exports, me = this;
     if (!useInteractive) {
@@ -266,7 +282,39 @@
         throw new Error("Tried to load '" + this.id +"' as a module, but it didn't have a 'provide()' in it.");
       }
     }
+  };
+  function Bundle(id, contents) {
+    this.id = id;
+    this.contents = contents;
+    this.dep = createDependency(id);
+    this.deps = [];
+    this.path = this.dep.path;
   }
+  Bundle.prototype = new Script;
+  Bundle.prototype.start = function() {
+    var me = this, def, dep, key;
+    for (var i=0, l=this.contents.length; i<l; i++) {
+      dep = createDependency(this.contents[i]);
+      this.deps.push(dep);
+      key = dep.key();
+
+      if (!metDependencies[key] && !inProgressDependencies[key] && !pausedDependencies[key]) {
+        pausedDependencies[key] = this;
+      }
+    }
+    Script.prototype.start.call(this);
+  };
+  Bundle.prototype.loaded = function() {
+    var p, exports, me = this, dep, key;
+    for (var i=0, l=this.deps.length; i<l; i++) {
+      dep = this.deps[i];
+      key = dep.key();
+
+      delete pausedDependencies[key];
+      metDependencies[key] = this;
+    }
+    Script.prototype.loaded.call(this);
+  };
 
   function Definition(id, body) {
     var module;
@@ -426,13 +474,15 @@
   }
   Sequence.prototype.forceFetch = forceFetch;
 
+  var definedBundles = [];
   function Manifest() {
     this.entries = {};
   }
   Manifest.prototype.push = function(bundle) {
     for (var file in bundle) {
+      definedBundles[file] = new Bundle(file, bundle[file]);
       for (var i=0, alias; alias = bundle[file][i]; i++) {
-        this.entries[alias] = file;
+        this.entries[alias] = definedBundles[file];
       }
     }
   }
@@ -588,8 +638,8 @@
   // Append your bundle manifests to this array
   // using.bundles.push( { "bundlename" : ["modulename", "modulename2", "script"], "bundle2": ["script2"] });
   // Loadbuilder can generate your bundles and manifests
-  function whichBundle(id) {
-    return using.bundles.get(id) || id;
+  function findBundle(id) {
+    return using.bundles.get(id) || undefined;
   }
 
   using.matchers = [];
@@ -598,12 +648,12 @@
   }
 
   using.matchers.add(/(^script!|\.js$)/, function(path) {
-    var script = new Script(path.replace(/^\$/, using.path.replace(/\/$/, '') + '/').replace(/^script!/,''));
+    var script = new Script(path.replace(/^script!/, ''));
     return script;
   });
 
   using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/]+$/, function(id) {
-    var mod = new Module(id.replace(/^lr!/, '').replace(/!$/, ''));
+    var mod = new Module(id.replace(/^lr!/, ''));
     return mod;
   });
 

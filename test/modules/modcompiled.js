@@ -1,4 +1,5 @@
 provide('thing', function(exports) {
+  window.thingLoaded = true;
   exports('thing');
 });
 
