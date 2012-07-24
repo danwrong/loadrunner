@@ -363,7 +363,7 @@
     if (typeof this.body == 'object') {
       this.complete(this.body);
     } else if (typeof this.body == 'function') {
-      this.body.call(window, function(exports) {
+      this.body(function(exports) {
         me.complete(exports);
       });
     }
