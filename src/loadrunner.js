@@ -358,14 +358,19 @@
     Definition.provided[id] = this;
   }
   Definition.prototype.fetch = function() {
-    var me = this;
+    var me = this,
+        complete;
 
     if (typeof this.body == 'object') {
       this.complete(this.body);
     } else if (typeof this.body == 'function') {
-      this.body.call(window, function(exports) {
+      complete = function(exports) {
         me.complete(exports);
-      });
+      };
+      // Pass a reference to this Definition instance.
+      // Used by amd.js during the Definition construction.
+      complete.definition = this;
+      this.body.call(window, complete);
     }
   }
   Definition.prototype.complete = function(exports) {
