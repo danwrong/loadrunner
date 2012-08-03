@@ -21,9 +21,22 @@
     function resolve(id, mod) {
       // replace the './' on the id with the dir taken from the mod id.
       var from = mod.id || '';
-      var parts = from.split('/'); parts.pop();
-      var dir = parts.join('/');
-      return id.replace(/^\./, dir);
+      var modParts = from.split('/'); modParts.pop();
+      var idParts = id.split('/');
+      var relative = false;
+      while (idParts[0] == '..' && modParts.length) {
+        modParts.pop();
+        idParts.shift();
+        relative = true;
+      }
+      if (idParts[0] == '.') {
+        idParts.shift();
+        relative = true;
+      }
+      if (relative) {
+        idParts = modParts.concat(idParts);
+      }
+      return idParts.join('/');
     }
 
     function mapArgs(args, mod) {
