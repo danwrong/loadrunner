@@ -4,5 +4,5 @@
     "description": "Simple, flexible and sane JavaScript loader and build tool for browsers.",
     "contributors": [{ "name": "Dan Webb", "email": "dan@danwebb.net" }],
     "homepage": "https://github.com/danwrong/loadrunner",
-    "main" : "src/loadrunner"
+    "main" : "./src/loadrunner.js"
 }
