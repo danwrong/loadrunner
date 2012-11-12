@@ -647,14 +647,14 @@
     this.unshift([regex, factory]);
   }
 
+  using.matchers.add(/^(lr!)?[a-zA-Z0-9_\/.-]+$/, function(id) {
+    var mod = new Module(id.replace(/^lr!/, ''));
+    return mod;
+  });
+
   using.matchers.add(/(^script!|\.js$)/, function(path) {
     var script = new Script(path.replace(/^script!/, ''));
     return script;
-  });
-
-  using.matchers.add(/^(lr!)?[a-zA-Z0-9_\-\/]+$/, function(id) {
-    var mod = new Module(id.replace(/^lr!/, ''));
-    return mod;
   });
 
   if (scriptTag) {

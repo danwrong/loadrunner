@@ -58,6 +58,16 @@
       });
     });
 
+    QUnit.test('should load an AMD module with parent folder dependencies', function() {
+      expect(1);
+      stop(2000);
+
+      using('amd/dotdotslash', function(a) {
+        equals(a.modb, 'success', 'loaded parent folder dependencies');
+        start();
+      });
+    });
+
     QUnit.test('should be able to use require and exports in AMD module', function() {
       expect(1);
       stop(2000);
