@@ -1,4 +1,4 @@
-define(['./modb', '../amd/modb'], function(modb, modb) {
+define(['./modb'], function(modb) {
   return {
     modb: modb.test()
   };
