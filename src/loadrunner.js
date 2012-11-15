@@ -149,21 +149,11 @@
     if (path) {
       this.id = this.path = this.resolvePath(path);
     }
+    this.originalPath = path;
 
     this.force = !!force;
   }
   Script.autoFetch = true;
-
-  Script.prototype.start = function() {
-    var me = this, bundle;
-    if (bundle = findBundle(this.id)) {
-      bundle.then(function() {
-        me.start();
-      });
-    } else {
-      Dependency.prototype.start.call(this);
-    }
-  };
 
   Script.xhrTransport = function() {
     var xhr;
@@ -224,6 +214,22 @@
   }
 
   Script.prototype = new Dependency;
+
+  Script.prototype.start = function() {
+    var me = this, bundle;
+    if (def = Definition.provided[this.originalPath]) {
+      def.then(function() {
+        me.complete();
+      });
+    } else if (bundle = findBundle(this.originalPath)) {
+      bundle.then(function() {
+        me.start();
+      });
+    } else {
+      Dependency.prototype.start.call(this);
+    }
+  };
+
   Script.prototype.resolvePath = function(filePath) {
     filePath = filePath.replace(/^\$/, using.path.replace(/\/$/, '') + '/');
     return filePath;
@@ -237,7 +243,7 @@
   Script.prototype.fetch = Script.scriptTagTransport;
   Script.prototype.loaded = function() {
     this.complete();
-  }
+  };
 
   function Module(id, force) {
     this.id = id;
@@ -485,11 +491,10 @@
         this.entries[alias] = definedBundles[file];
       }
     }
-  }
+  };
   Manifest.prototype.get = function(key) {
     return this.entries[key];
-  }
-
+  };
 
   function interactiveScript() {
     for (var i in scripts) {
