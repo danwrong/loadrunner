@@ -117,6 +117,8 @@
       return def;
     }
 
+    define.amd = {};
+
     context.define = define;
   });
 }(this));
