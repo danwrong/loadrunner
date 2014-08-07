@@ -156,7 +156,7 @@
 
   Script.prototype.start = function() {
     var me = this, bundle;
-    // Here be the bit wot I have to change
+
     if (bundle = findBundle(this.id)) {
       bundle.then(function() {
         me.start();
@@ -493,18 +493,15 @@
   }
   Manifest.prototype.get = function(key) {
     if (typeof this.entries[key] == 'undefined') {
-      console.log(key, 'not in bundle');
       return null;
     }
 
     for (var i=0, candidate; candidate = this.entries[key][i]; i++) {
       if (typeof candidate.startTime != 'undefined') {
-        console.log(key, 'found in other inprogress bundle', candidate.id);
         return candidate;
       }
     }
 
-    console.log(key, 'found in bundle', this.entries[key][0].id);
     return this.entries[key][0];
   }
 
