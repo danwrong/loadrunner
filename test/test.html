@@ -313,6 +313,7 @@
           equals(false, window.thingLoaded);
           using.bundles.push({ 'modules/modcompiled.js': ['thing', 'another'] });
           using('another', function(a) {
+            console.log('hello');
             equals(a, 'another');
             equals(false, window.thingLoaded);
             start();

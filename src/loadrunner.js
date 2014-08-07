@@ -156,6 +156,7 @@
 
   Script.prototype.start = function() {
     var me = this, bundle;
+    // Here be the bit wot I have to change
     if (bundle = findBundle(this.id)) {
       bundle.then(function() {
         me.start();
@@ -474,20 +475,37 @@
   }
   Sequence.prototype.forceFetch = forceFetch;
 
-  var definedBundles = [];
   function Manifest() {
     this.entries = {};
   }
   Manifest.prototype.push = function(bundle) {
+    var b;
+
     for (var file in bundle) {
-      definedBundles[file] = new Bundle(file, bundle[file]);
+      b = new Bundle(file, bundle[file]);
+
       for (var i=0, alias; alias = bundle[file][i]; i++) {
-        this.entries[alias] = definedBundles[file];
+        this.entries[alias] = this.entries[alias] || [];
+        this.entries[alias].push(b);
       }
     }
+
   }
   Manifest.prototype.get = function(key) {
-    return this.entries[key];
+    if (typeof this.entries[key] == 'undefined') {
+      console.log(key, 'not in bundle');
+      return null;
+    }
+
+    for (var i=0, candidate; candidate = this.entries[key][i]; i++) {
+      if (typeof candidate.startTime != 'undefined') {
+        console.log(key, 'found in other inprogress bundle', candidate.id);
+        return candidate;
+      }
+    }
+
+    console.log(key, 'found in bundle', this.entries[key][0].id);
+    return this.entries[key][0];
   }
 
 
