@@ -1,6 +1,6 @@
 {
     "name": "loadrunner",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Simple, flexible and sane JavaScript loader and build tool for browsers.",
     "contributors": [{ "name": "Dan Webb", "email": "dan@danwebb.net" }],
     "homepage": "https://github.com/danwrong/loadrunner",
