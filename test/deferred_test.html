@@ -45,6 +45,32 @@
           });
         });
       });
+
+      test('should be able load deferred scripts from a bundle', function() {
+        expect(2);
+        stop(2000);
+        loadrunner.reset();
+        window.bundleLoadedThing = false;
+        window.bundleLoadedAnother = false;
+        using.bundles.push({ 'javascripts/deferred_bundle.js': ['bundled_thing.js', 'bundled_another.js'] });
+        using('bundled_thing.js', function() {
+          equals(true, window.bundleLoadedThing);
+          equals(false, window.bundleLoadedAnother);
+          start();
+        });
+      });
+
+      test('should be able load modpath deferred scripts from a bundle', function() {
+        expect(1);
+        stop(2000);
+        loadrunner.reset();
+        window.bundleLoadedModpath = false;
+        using.bundles.push({ 'javascripts/deferred_bundle.js': ['$bundled_with_modpath.js'] });
+        using('$bundled_with_modpath.js', function() {
+          equals(true, window.bundleLoadedModpath);
+          start();
+        });
+      });
     </script>
   </body>
 </html>
