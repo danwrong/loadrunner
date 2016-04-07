@@ -105,7 +105,7 @@ __provide([id,] factory)__ => Module
 
     // define then use a module, test
     provide('test', function(exports) {
-      var thing = 46;
+      var thing = 47;
 
       exports(thing);
     });
